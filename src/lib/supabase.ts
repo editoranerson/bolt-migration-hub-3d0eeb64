@@ -49,7 +49,9 @@ export interface HangmanGame {
   hint: string;
   reward_dantes: number;
   is_active: boolean;
+  sort_order?: number;
   created_at: string;
+
 }
 
 export interface PuzzleGame {
@@ -106,6 +108,8 @@ export interface ShopRedemption {
   status: RedemptionStatus;
   redeemed_at: string;
   updated_at: string;
+  created_at?: string;
+
 }
 
 export interface GameWin {
