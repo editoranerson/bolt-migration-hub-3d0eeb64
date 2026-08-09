@@ -2820,7 +2820,7 @@ function RedemptionsAdmin() {
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-grape-50">{r.shop_item?.name ?? 'Item removido'}</p>
                   <p className="text-xs text-grape-200/50">
-                    {r.user_profile?.full_name ?? 'Usuário'} · {r.user_profile?.email ?? ''} · {new Date(r.created_at).toLocaleString('pt-BR')}
+                    {r.user_profile?.full_name ?? 'Usuário'} · {r.user_profile?.email ?? ''} · {new Date(r.created_at ?? r.redeemed_at).toLocaleString('pt-BR')}
                   </p>
                 </div>
                 <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[r.status]}`}>{statusLabels[r.status]}</span>
