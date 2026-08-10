@@ -1068,15 +1068,22 @@ function UsersAdmin() {
     const expiry = planExpiry
       ? new Date(planExpiry + 'T23:59:59').toISOString()
       : null;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .update({
         plan: planGrant,
         plan_expires_at: planGrant === 'free' ? null : expiry,
       })
-      .eq('id', selected.id);
+      .eq('id', selected.id)
+      .select('id, plan, plan_expires_at');
     setGranting(false);
-    if (error) return toast('Erro ao atualizar plano.', 'error');
+    if (error) return toast(`Erro ao atualizar plano: ${error.message}`, 'error');
+    if (!data || data.length === 0) {
+      return toast(
+        'O plano NÃO foi alterado: o banco bloqueou a atualização (RLS). Aplique a policy de admin em profiles.',
+        'error',
+      );
+    }
     toast(`Plano de ${selected.full_name} atualizado!`, 'success');
     setPlanExpiry('');
     load();
