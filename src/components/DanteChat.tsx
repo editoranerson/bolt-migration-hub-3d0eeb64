@@ -316,7 +316,10 @@ export function DanteChat() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    const isTouch =
+                      typeof window !== 'undefined' &&
+                      window.matchMedia('(pointer: coarse)').matches;
+                    if (e.key === 'Enter' && !e.shiftKey && !isTouch) {
                       e.preventDefault();
                       sendMessage();
                     }

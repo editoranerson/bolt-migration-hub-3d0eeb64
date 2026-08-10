@@ -10,13 +10,13 @@ const NAV_ITEMS: { label: string; route: Route }[] = [
   { label: 'Home', route: { name: 'home' } },
   { label: 'Personagens', route: { name: 'personagens' } },
   { label: 'Segredos', route: { name: 'segredos' } },
+  { label: 'Capítulos Arquivados', route: { name: 'arquivados' } },
   { label: 'Playlist', route: { name: 'playlist' } },
   { label: 'Álbum de Cartas', route: { name: 'album' } },
   { label: 'Tarefas', route: { name: 'tarefas' } },
   { label: 'Minijogos', route: { name: 'minijogos' } },
   { label: 'Loja', route: { name: 'loja' } },
   { label: 'Planos', route: { name: 'planos' } },
-  { label: 'Capítulos Arquivados', route: { name: 'arquivados' } },
 ];
 
 export function Navbar() {

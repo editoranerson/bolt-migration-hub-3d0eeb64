@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Sparkles, FileText, ShieldCheck, Info, Mail, HelpCircle, ShoppingBag, Gamepad2 } from 'lucide-react';
+import { Sparkles, FileText, ShieldCheck, Info, Mail, HelpCircle } from 'lucide-react';
 import { navigateTo } from '@/lib/router';
 import { supabase, type SiteContent } from '@/lib/supabase';
 import { Modal } from './Modal';
@@ -65,18 +65,6 @@ export function Footer() {
               className="inline-flex items-center gap-1.5 hover:text-grape-50"
             >
               <HelpCircle size={15} /> FAQ
-            </button>
-            <button
-              onClick={() => navigateTo({ name: 'loja' })}
-              className="inline-flex items-center gap-1.5 hover:text-grape-50"
-            >
-              <ShoppingBag size={15} /> Loja
-            </button>
-            <button
-              onClick={() => navigateTo({ name: 'minijogos' })}
-              className="inline-flex items-center gap-1.5 hover:text-grape-50"
-            >
-              <Gamepad2 size={15} /> Minijogos
             </button>
           </div>
 

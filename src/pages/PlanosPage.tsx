@@ -140,12 +140,6 @@ export function PlanosPage() {
                     Dantes em dobro nos minijogos
                   </li>
                 )}
-                {plan.id === 'dante_premium_plus' && (
-                  <li className="flex items-start gap-2">
-                    <Check size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" />
-                    Acesso prioritário a novidades
-                  </li>
-                )}
               </ul>
 
               <button
