@@ -15,6 +15,11 @@ Este projeto ainda **não está conectado** ao repositório `github.com/qrddante
 
 > Atenção: o repositório original do Bolt tem uma estrutura diferente (SPA com hash-router) da estrutura atual (TanStack Start). Avalie se deseja substituir o conteúdo do GitHub pela versão Lovable ou manter um branch separado.
 
+### Atualizações já sincronizadas manualmente do GitHub
+
+- **Página Planos (`/planos`)**: trazida do repositório GitHub e integrada ao roteamento do projeto Lovable. A página exibe os planos Free, Dante Plus, Dante Premium e Dante Premium+.
+- **Navegação**: item "Planos" adicionado à navbar e botão "Fazer upgrade do plano" no perfil redireciona para `/planos`.
+
 ### Supabase
 
 O projeto usa o Supabase próprio do usuário (BYO), configurado com as variáveis:
