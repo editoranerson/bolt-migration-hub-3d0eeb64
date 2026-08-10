@@ -77,6 +77,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "google", content: "notranslate" },
+      { httpEquiv: "content-language", content: "pt-BR" },
+      { property: "og:locale", content: "pt_BR" },
+      { property: "og:site_name", content: "Querido Dante" },
       { title: "Querido Dante" },
       { name: "description", content: "O universo interativo de Querido Dante." },
       { property: "og:type", content: "website" },
@@ -105,7 +109,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR" translate="no" className="notranslate">
       <head>
         <HeadContent />
       </head>

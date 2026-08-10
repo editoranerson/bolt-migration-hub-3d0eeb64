@@ -39,11 +39,17 @@ export function PlanUpgradeModal({
           success_url: window.location.origin,
         }),
       });
+      const raw = await res.text();
+      let data: { init_point?: string; error?: string } = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = {};
+      }
       if (!res.ok) {
-        toast('Erro ao iniciar pagamento.', 'error');
+        toast(data.error || `Erro ao iniciar pagamento (${res.status}).`, 'error');
         return;
       }
-      const data = await res.json();
       if (data.init_point) {
         window.location.href = data.init_point;
       } else {

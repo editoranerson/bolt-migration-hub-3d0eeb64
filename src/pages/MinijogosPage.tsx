@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Gamepad2, Heart, Puzzle, Brain, Trophy, RotateCcw, Check, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { getEffectivePlan } from '@/lib/plans';
 import { useToast } from '@/components/Toast';
 import { supabase } from '@/lib/supabase';
 import type { HangmanGame, PuzzleGame, QuizGroup, QuizQuestion } from '@/lib/supabase';
@@ -50,7 +51,8 @@ export function MinijogosPage() {
 
 // ===================== HANGMAN =====================
 function HangmanGame_() {
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
+  const rewardMultiplier = profile && getEffectivePlan(profile) !== 'free' ? 2 : 1;
   const { toast } = useToast();
   const [games, setGames] = useState<HangmanGame[]>([]);
   const [current, setCurrent] = useState<HangmanGame | null>(null);
@@ -104,8 +106,9 @@ function HangmanGame_() {
     }
   };
 
-  const awardWin = async (gameType: string, gameId: string, reward: number) => {
+  const awardWin = async (gameType: string, gameId: string, baseReward: number) => {
     if (!user) return;
+    const reward = baseReward * rewardMultiplier;
     try {
       const { data, error } = await supabase.rpc('award_game_win', {
         p_game_type: gameType,
@@ -251,7 +254,8 @@ function HangmanGame_() {
 
 // ===================== PUZZLE (simplified sliding puzzle) =====================
 function PuzzleGame_() {
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
+  const rewardMultiplier = profile && getEffectivePlan(profile) !== 'free' ? 2 : 1;
   const { toast } = useToast();
   const [games, setGames] = useState<PuzzleGame[]>([]);
   const [current, setCurrent] = useState<PuzzleGame | null>(null);
@@ -324,12 +328,12 @@ function PuzzleGame_() {
       const { data, error } = await supabase.rpc('award_game_win', {
         p_game_type: 'puzzle',
         p_game_id: current.id,
-        p_reward: current.reward_dantes,
+        p_reward: current.reward_dantes * rewardMultiplier,
       });
       if (error) throw error;
       const result = data as { success: boolean; reason?: string };
       if (result.success) {
-        toast(`Quebra-cabeça resolvido! +${current.reward_dantes} Dantes!`, 'success');
+        toast(`Quebra-cabeça resolvido! +${current.reward_dantes * rewardMultiplier} Dantes!`, 'success');
         await refreshProfile();
       } else if (result.reason === 'already_won') {
         toast(`Quebra-cabeça resolvido! (Dantes já resgatados)`, 'info');
@@ -431,7 +435,8 @@ function PuzzleGame_() {
 
 // ===================== QUIZ =====================
 function QuizGame_() {
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
+  const rewardMultiplier = profile && getEffectivePlan(profile) !== 'free' ? 2 : 1;
   const { toast } = useToast();
   const [groups, setGroups] = useState<QuizGroup[]>([]);
   const [current, setCurrent] = useState<QuizGroup | null>(null);
@@ -490,8 +495,9 @@ function QuizGame_() {
     }, 1200);
   };
 
-  const awardWin = async (gameId: string, reward: number) => {
+  const awardWin = async (gameId: string, baseReward: number) => {
     if (!user) return;
+    const reward = baseReward * rewardMultiplier;
     try {
       const { data, error } = await supabase.rpc('award_game_win', {
         p_game_type: 'quiz',

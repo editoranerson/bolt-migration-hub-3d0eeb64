@@ -41,11 +41,17 @@ export function PlanosPage() {
           success_url: window.location.origin,
         }),
       });
+      const raw = await res.text();
+      let data: { init_point?: string; error?: string } = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = {};
+      }
       if (!res.ok) {
-        toast('Erro ao iniciar pagamento.', 'error');
+        toast(data.error || `Erro ao iniciar pagamento (${res.status}).`, 'error');
         return;
       }
-      const data = await res.json();
       if (data.init_point) {
         window.location.href = data.init_point;
       } else {
@@ -138,12 +144,6 @@ export function PlanosPage() {
                   <li className="flex items-start gap-2">
                     <Check size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" />
                     Dantes em dobro nos minijogos
-                  </li>
-                )}
-                {plan.id === 'dante_premium_plus' && (
-                  <li className="flex items-start gap-2">
-                    <Check size={16} className="mt-0.5 flex-shrink-0 text-emerald-400" />
-                    Acesso prioritário a novidades
                   </li>
                 )}
               </ul>
