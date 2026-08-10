@@ -15,6 +15,7 @@ const NAV_ITEMS: { label: string; route: Route }[] = [
   { label: 'Tarefas', route: { name: 'tarefas' } },
   { label: 'Minijogos', route: { name: 'minijogos' } },
   { label: 'Loja', route: { name: 'loja' } },
+  { label: 'Planos', route: { name: 'planos' } },
   { label: 'Capítulos Arquivados', route: { name: 'arquivados' } },
 ];
 

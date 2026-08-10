@@ -26,6 +26,7 @@ import { DiagPage } from '@/pages/DiagPage';
 import { FaqPage } from '@/pages/FaqPage';
 import { LojaPage } from '@/pages/LojaPage';
 import { MinijogosPage } from '@/pages/MinijogosPage';
+import { PlanosPage } from '@/pages/PlanosPage';
 
 function Routed() {
   const { route } = useRouter();
@@ -106,6 +107,8 @@ function Routed() {
           <MinijogosPage />
         </RequireAuth>
       );
+    case 'planos':
+      return <PlanosPage />;
     default:
       return <HomePage />;
   }
