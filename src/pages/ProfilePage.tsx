@@ -232,7 +232,7 @@ export function ProfilePage() {
             </div>
             {getEffectivePlan(profile) === 'free' && (
               <button
-                onClick={() => navigateTo({ name: 'profile' })}
+                onClick={() => navigateTo({ name: 'planos' })}
                 className="w-full rounded-full bg-gradient-to-r from-sky2-400 to-rose-400 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
               >
                 Fazer upgrade do plano

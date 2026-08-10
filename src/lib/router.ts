@@ -20,6 +20,7 @@ export type Route =
   | { name: 'faq' }
   | { name: 'loja' }
   | { name: 'minijogos' }
+  | { name: 'planos' }
   | { name: 'diag' };
 
 function parsePath(path: string): Route {
@@ -41,6 +42,7 @@ function parsePath(path: string): Route {
   if (path === '/faq') return { name: 'faq' };
   if (path === '/loja') return { name: 'loja' };
   if (path === '/minijogos') return { name: 'minijogos' };
+  if (path === '/planos') return { name: 'planos' };
   if (path === '/diag') return { name: 'diag' };
 
   const arquivadoMatch = path.match(/^\/capitulos-arquivados\/(.+)$/);
@@ -95,6 +97,8 @@ export function routeToPath(route: Route): string {
       return '/loja';
     case 'minijogos':
       return '/minijogos';
+    case 'planos':
+      return '/planos';
     case 'diag':
       return '/diag';
   }
