@@ -220,12 +220,23 @@ export interface SiteContent {
   updated_at: string;
 }
 
+export interface LibraryCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  sort_order: number;
+  created_at: string;
+}
+
 export interface ArchivedChapter {
   id: string;
   chapter_number: number;
   title: string;
+  slug: string;
   body: string;
   archive_reason: string;
+  category_id: string | null;
   created_at: string;
   updated_at: string;
 }

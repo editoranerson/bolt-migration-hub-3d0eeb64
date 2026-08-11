@@ -1,28 +1,42 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Archive, BookOpen } from 'lucide-react';
-import { supabase, type ArchivedChapter } from '@/lib/supabase';
+import { ArrowLeft, BookOpen, Library } from 'lucide-react';
+import { supabase, type ArchivedChapter, type LibraryCategory } from '@/lib/supabase';
 import { navigateTo } from '@/lib/router';
 
-export function ArchivedChapterDetailPage({ id }: { id: string }) {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function BibliotecaChapterPage({ cat, slug }: { cat: string; slug: string }) {
   const [chapter, setChapter] = useState<ArchivedChapter | null>(null);
+  const [category, setCategory] = useState<LibraryCategory | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    supabase
-      .from('archived_chapters')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error || !data) {
-          setNotFound(true);
-        } else {
-          setChapter(data as ArchivedChapter);
-        }
+    const query = UUID.test(slug)
+      ? supabase.from('archived_chapters').select('*').eq('id', slug)
+      : supabase.from('archived_chapters').select('*').eq('slug', slug);
+
+    query.maybeSingle().then(async ({ data, error }) => {
+      if (error || !data) {
+        setNotFound(true);
         setLoading(false);
-      });
-  }, [id]);
+        return;
+      }
+      const ch = data as ArchivedChapter;
+      setChapter(ch);
+      if (ch.category_id) {
+        const { data: c } = await supabase
+          .from('library_categories')
+          .select('*')
+          .eq('id', ch.category_id)
+          .maybeSingle();
+        if (c) setCategory(c as LibraryCategory);
+      }
+      setLoading(false);
+    });
+  }, [slug]);
+
+  const back = () => navigateTo({ name: 'biblioteca', cat: category?.slug ?? cat });
 
   if (loading) {
     return (
@@ -32,35 +46,32 @@ export function ArchivedChapterDetailPage({ id }: { id: string }) {
     );
   }
 
-  if (notFound) {
+  if (notFound || !chapter) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6">
-        <Archive size={40} className="mx-auto mb-4 text-grape-300/50" />
-        <h1 className="font-display text-2xl font-semibold text-grape-50">Capítulo não encontrado</h1>
-        <button
-          onClick={() => navigateTo({ name: 'arquivados' })}
-          className="btn-ghost mt-6"
-        >
-          <ArrowLeft size={16} /> Voltar aos Arquivos
+        <Library size={40} className="mx-auto mb-4 text-grape-300/50" />
+        <h1 className="font-display text-2xl font-semibold text-grape-50">
+          Capítulo não encontrado
+        </h1>
+        <button onClick={back} className="btn-ghost mt-6">
+          <ArrowLeft size={16} /> Voltar à Biblioteca
         </button>
       </div>
     );
   }
 
-  if (!chapter) return null;
-
   return (
     <div className="animate-fade-in mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <button
-        onClick={() => navigateTo({ name: 'arquivados' })}
+        onClick={back}
         className="mb-6 inline-flex items-center gap-2 text-sm text-grape-200/70 transition hover:text-grape-50"
       >
-        <ArrowLeft size={16} /> Voltar aos Arquivos
+        <ArrowLeft size={16} /> Voltar à Biblioteca
       </button>
 
       <div className="mb-8 text-center">
         <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-grape-200/80">
-          <Archive size={14} className="text-rose-400" /> Arquivo
+          <Library size={14} className="text-rose-400" /> {category?.name ?? 'Biblioteca'}
         </div>
         <div className="mb-2 flex items-center justify-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-grape-500/30 to-rose-500/30 text-lg font-bold text-grape-200">
@@ -74,19 +85,10 @@ export function ArchivedChapterDetailPage({ id }: { id: string }) {
       </div>
 
       <div className="card p-6 sm:p-8">
-        <div className="prose-md whitespace-pre-wrap text-grape-100/90 leading-relaxed">
+        <div className="prose-md whitespace-pre-wrap leading-relaxed text-grape-100/90">
           {chapter.body}
         </div>
       </div>
-
-      {chapter.archive_reason && (
-        <div className="mt-6 rounded-xl border border-rose-500/20 bg-rose-500/5 p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-rose-300/80">
-            Motivo do arquivamento
-          </p>
-          <p className="mt-1.5 text-sm text-grape-200/70">{chapter.archive_reason}</p>
-        </div>
-      )}
     </div>
   );
 }

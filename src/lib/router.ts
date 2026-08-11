@@ -13,8 +13,8 @@ export type Route =
   | { name: 'profile' }
   | { name: 'terms' }
   | { name: 'privacy' }
-  | { name: 'arquivados' }
-  | { name: 'arquivado'; id: string }
+  | { name: 'biblioteca'; cat?: string }
+  | { name: 'biblioteca_cap'; cat: string; slug: string }
   | { name: 'sobre' }
   | { name: 'contato' }
   | { name: 'faq' }
@@ -36,7 +36,7 @@ function parsePath(path: string): Route {
   if (path === '/perfil') return { name: 'profile' };
   if (path === '/termos') return { name: 'terms' };
   if (path === '/privacidade') return { name: 'privacy' };
-  if (path === '/capitulos-arquivados') return { name: 'arquivados' };
+  if (path === '/biblioteca' || path === '/capitulos-arquivados') return { name: 'biblioteca' };
   if (path === '/sobre') return { name: 'sobre' };
   if (path === '/contato') return { name: 'contato' };
   if (path === '/faq') return { name: 'faq' };
@@ -45,8 +45,10 @@ function parsePath(path: string): Route {
   if (path === '/planos') return { name: 'planos' };
   if (path === '/diag') return { name: 'diag' };
 
-  const arquivadoMatch = path.match(/^\/capitulos-arquivados\/(.+)$/);
-  if (arquivadoMatch) return { name: 'arquivado', id: arquivadoMatch[1] };
+  const capMatch = path.match(/^\/biblioteca\/([^/]+)\/(.+)$/);
+  if (capMatch) return { name: 'biblioteca_cap', cat: capMatch[1], slug: capMatch[2] };
+  const catMatch = path.match(/^\/biblioteca\/([^/]+)$/);
+  if (catMatch) return { name: 'biblioteca', cat: catMatch[1] };
 
   return { name: 'home' };
 }
@@ -83,10 +85,10 @@ export function routeToPath(route: Route): string {
       return '/termos';
     case 'privacy':
       return '/privacidade';
-    case 'arquivados':
-      return '/capitulos-arquivados';
-    case 'arquivado':
-      return `/capitulos-arquivados/${route.id}`;
+    case 'biblioteca':
+      return route.cat ? `/biblioteca/${route.cat}` : '/biblioteca';
+    case 'biblioteca_cap':
+      return `/biblioteca/${route.cat}/${route.slug}`;
     case 'sobre':
       return '/sobre';
     case 'contato':

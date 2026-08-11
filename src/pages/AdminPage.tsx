@@ -57,6 +57,7 @@ import {
   type QuizQuestion,
   type ShopItem,
   type ShopRedemption,
+  type LibraryCategory,
   type RewardType,
   type RedemptionStatus,
 } from '@/lib/supabase';
@@ -77,7 +78,7 @@ type AdminTab =
   | 'conversas'
   | 'conhecimento'
   | 'textos'
-  | 'arquivados'
+  | 'biblioteca'
   | 'mensagens'
   | 'faq'
   | 'minijogos'
@@ -96,7 +97,7 @@ const TABS: { id: AdminTab; label: string; icon: typeof Shield }[] = [
   { id: 'conversas', label: 'Conversas', icon: MessageSquare },
   { id: 'conhecimento', label: 'Conhecimento', icon: Brain },
   { id: 'textos', label: 'Textos do Site', icon: FileText },
-  { id: 'arquivados', label: 'Arquivados', icon: Archive },
+  { id: 'biblioteca', label: 'Biblioteca', icon: Archive },
   { id: 'mensagens', label: 'Mensagens', icon: Mail },
   { id: 'faq', label: 'FAQ', icon: HelpCircle },
   { id: 'minijogos', label: 'Minijogos', icon: Gamepad2 },
@@ -146,7 +147,7 @@ export function AdminPage() {
       {tab === 'conversas' && <ConversationsAdmin />}
       {tab === 'conhecimento' && <KnowledgeAdmin />}
       {tab === 'textos' && <ContentAdmin />}
-      {tab === 'arquivados' && <ArchivedChaptersAdmin />}
+      {tab === 'biblioteca' && <LibraryAdmin />}
       {tab === 'mensagens' && <ContactMessagesAdmin />}
       {tab === 'faq' && <FaqAdmin />}
       {tab === 'minijogos' && <MinijogosAdmin />}
@@ -1838,7 +1839,200 @@ function ConversationsAdmin() {
   );
 }
 
-function ArchivedChaptersAdmin() {
+function slugify(s: string) {
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+function LibraryAdmin() {
+  const [sub, setSub] = useState<'capitulos' | 'categorias'>('capitulos');
+  const [categories, setCategories] = useState<LibraryCategory[]>([]);
+
+  const loadCategories = useCallback(() => {
+    supabase
+      .from('library_categories')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .then(({ data }) => setCategories((data as LibraryCategory[]) ?? []));
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
+  return (
+    <div>
+      <div className="mb-4 flex gap-2">
+        {(['capitulos', 'categorias'] as const).map((s) => (
+          <button
+            key={s}
+            onClick={() => setSub(s)}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              sub === s
+                ? 'bg-gradient-to-r from-grape-500 to-rose-500 text-white'
+                : 'border border-white/10 text-grape-200/60 hover:bg-white/5'
+            }`}
+          >
+            {s === 'capitulos' ? 'Capítulos' : 'Categorias'}
+          </button>
+        ))}
+      </div>
+      {sub === 'categorias' ? (
+        <CategoriesAdmin categories={categories} reload={loadCategories} />
+      ) : (
+        <ChaptersAdmin categories={categories} />
+      )}
+    </div>
+  );
+}
+
+function CategoriesAdmin({
+  categories,
+  reload,
+}: {
+  categories: LibraryCategory[];
+  reload: () => void;
+}) {
+  const { toast } = useToast();
+  const [editing, setEditing] = useState<LibraryCategory | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: '', slug: '', description: '', sort_order: '0' });
+  const [saving, setSaving] = useState(false);
+
+  const openNew = () => {
+    setEditing(null);
+    setForm({ name: '', slug: '', description: '', sort_order: String(categories.length) });
+    setShowForm(true);
+  };
+
+  const openEdit = (c: LibraryCategory) => {
+    setEditing(c);
+    setForm({
+      name: c.name,
+      slug: c.slug,
+      description: c.description ?? '',
+      sort_order: String(c.sort_order ?? 0),
+    });
+    setShowForm(true);
+  };
+
+  const save = async () => {
+    if (!form.name.trim()) return toast('Informe o nome da categoria.', 'error');
+    setSaving(true);
+    const payload = {
+      name: form.name.trim(),
+      slug: slugify(form.slug || form.name),
+      description: form.description,
+      sort_order: parseInt(form.sort_order, 10) || 0,
+    };
+    const { error } = editing
+      ? await supabase.from('library_categories').update(payload).eq('id', editing.id)
+      : await supabase.from('library_categories').insert(payload);
+    setSaving(false);
+    if (error) return toast(error.message, 'error');
+    toast('Categoria salva!', 'success');
+    setShowForm(false);
+    reload();
+  };
+
+  const del = async (c: LibraryCategory) => {
+    const { error } = await supabase.from('library_categories').delete().eq('id', c.id);
+    if (error) return toast(error.message, 'error');
+    toast('Categoria excluída.', 'success');
+    reload();
+  };
+
+  return (
+    <div>
+      <SectionHeader title="Categorias da Biblioteca" onAdd={openNew} />
+      {categories.length === 0 ? (
+        <Empty text="Nenhuma categoria cadastrada." />
+      ) : (
+        <div className="space-y-3">
+          {categories.map((c) => (
+            <div key={c.id} className="card flex items-center gap-4 p-4">
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate font-semibold text-grape-50">{c.name}</h3>
+                <p className="truncate text-xs text-grape-200/50">
+                  /{c.slug} · {c.description || 'Sem anotação'}
+                </p>
+              </div>
+              <button onClick={() => openEdit(c)} className="rounded-lg p-2 text-grape-200 hover:bg-white/10">
+                <Pencil size={16} />
+              </button>
+              <button onClick={() => del(c)} className="rounded-lg p-2 text-rose-300 hover:bg-rose-500/10">
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showForm && (
+        <Modal
+          open={showForm}
+          onClose={() => setShowForm(false)}
+          title={editing ? 'Editar Categoria' : 'Nova Categoria'}
+          maxWidth="max-w-xl"
+        >
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="label">Nome</label>
+                <input
+                  className="input"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="label">Ordem</label>
+                <input
+                  type="number"
+                  className="input"
+                  value={form.sort_order}
+                  onChange={(e) => setForm({ ...form, sort_order: e.target.value })}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="label">Slug (URL)</label>
+              <input
+                className="input"
+                value={form.slug}
+                placeholder={slugify(form.name) || 'ex: contos'}
+                onChange={(e) => setForm({ ...form, slug: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="label">Anotação / Sinopse (exibida no site)</label>
+              <textarea
+                className="input min-h-[120px] resize-y"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={save} disabled={saving} className="btn-primary flex-1 py-2.5 text-sm font-semibold disabled:opacity-50">
+                {saving ? 'Salvando...' : 'Salvar'}
+              </button>
+              <button onClick={() => setShowForm(false)} className="btn-ghost flex-1 py-2.5 text-sm font-semibold">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function ChaptersAdmin({ categories }: { categories: LibraryCategory[] }) {
   const [items, setItems] = useState<ArchivedChapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<ArchivedChapter | null>(null);
@@ -1847,8 +2041,9 @@ function ArchivedChaptersAdmin() {
   const [form, setForm] = useState({
     chapter_number: '',
     title: '',
+    slug: '',
     body: '',
-    archive_reason: '',
+    category_id: '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -1871,7 +2066,7 @@ function ArchivedChaptersAdmin() {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ chapter_number: '', title: '', body: '', archive_reason: '' });
+    setForm({ chapter_number: '', title: '', slug: '', body: '', category_id: categories[0]?.id ?? '' });
     setShowForm(true);
     setError('');
   };
@@ -1881,8 +2076,9 @@ function ArchivedChaptersAdmin() {
     setForm({
       chapter_number: String(ch.chapter_number),
       title: ch.title,
+      slug: ch.slug ?? '',
       body: ch.body,
-      archive_reason: ch.archive_reason,
+      category_id: ch.category_id ?? '',
     });
     setShowForm(true);
     setError('');
@@ -1891,31 +2087,27 @@ function ArchivedChaptersAdmin() {
   const save = async () => {
     const num = parseInt(form.chapter_number, 10);
     if (!form.title.trim() || !form.body.trim() || isNaN(num)) {
-      setError('Preencha número, título e texto.');
+      setError('Preencha ordem, título e texto.');
       return;
     }
     setSaving(true);
     const payload = {
       chapter_number: num,
       title: form.title.trim(),
+      slug: slugify(form.slug || form.title),
       body: form.body,
-      archive_reason: form.archive_reason.trim(),
+      category_id: form.category_id || null,
     };
-    if (editing) {
-      const { error } = await supabase
-        .from('archived_chapters')
-        .update(payload)
-        .eq('id', editing.id);
-      if (error) setError(error.message);
-    } else {
-      const { error } = await supabase.from('archived_chapters').insert(payload);
-      if (error) setError(error.message);
-    }
+    const res = editing
+      ? await supabase.from('archived_chapters').update(payload).eq('id', editing.id)
+      : await supabase.from('archived_chapters').insert(payload);
     setSaving(false);
-    if (!error) {
-      setShowForm(false);
-      load();
+    if (res.error) {
+      setError(res.error.message);
+      return;
     }
+    setShowForm(false);
+    load();
   };
 
   const del = async (ch: ArchivedChapter) => {
@@ -1926,10 +2118,13 @@ function ArchivedChaptersAdmin() {
     }
   };
 
+  const catName = (id: string | null) =>
+    categories.find((c) => c.id === id)?.name ?? 'Sem categoria';
+
   return (
     <div>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h2 className="font-display text-xl font-semibold text-grape-50">Capítulos Arquivados</h2>
+        <h2 className="font-display text-xl font-semibold text-grape-50">Capítulos da Biblioteca</h2>
         <button onClick={openNew} className="btn-primary flex items-center gap-2 px-4 py-2 text-sm">
           <Plus size={16} /> Novo Capítulo
         </button>
@@ -1940,9 +2135,7 @@ function ArchivedChaptersAdmin() {
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-grape-400 border-t-transparent" />
         </div>
       ) : items.length === 0 ? (
-        <div className="card p-8 text-center text-grape-200/60">
-          Nenhum capítulo arquivado ainda.
-        </div>
+        <div className="card p-8 text-center text-grape-200/60">Nenhum capítulo cadastrado ainda.</div>
       ) : (
         <div className="space-y-3">
           {items.map((ch) => (
@@ -1952,9 +2145,7 @@ function ArchivedChaptersAdmin() {
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="truncate font-semibold text-grape-50">{ch.title}</h3>
-                <p className="truncate text-sm text-grape-200/50">
-                  {ch.archive_reason || 'Sem motivo informado'}
-                </p>
+                <p className="truncate text-sm text-grape-200/50">{catName(ch.category_id)}</p>
               </div>
               <div className="flex flex-shrink-0 gap-2">
                 <button
@@ -1981,13 +2172,13 @@ function ArchivedChaptersAdmin() {
         <Modal
           open={showForm}
           onClose={() => setShowForm(false)}
-          title={editing ? 'Editar Capítulo' : 'Novo Capítulo Arquivado'}
+          title={editing ? 'Editar Capítulo' : 'Novo Capítulo'}
           maxWidth="max-w-2xl"
         >
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-grape-200">Número</label>
+                <label className="mb-1 block text-sm font-medium text-grape-200">Número de ordem</label>
                 <input
                   type="number"
                   value={form.chapter_number}
@@ -2008,26 +2199,37 @@ function ArchivedChaptersAdmin() {
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-grape-200">
-                Texto do capítulo
-              </label>
+              <label className="mb-1 block text-sm font-medium text-grape-200">Categoria</label>
+              <select
+                value={form.category_id}
+                onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+                className="input"
+              >
+                <option value="">Sem categoria</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-grape-200">Slug (URL)</label>
+              <input
+                type="text"
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                className="input"
+                placeholder={slugify(form.title) || 'ex: capitulo-1'}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-grape-200">Texto do capítulo</label>
               <textarea
                 value={form.body}
                 onChange={(e) => setForm({ ...form, body: e.target.value })}
                 className="input min-h-[200px] resize-y"
                 placeholder="Texto completo do capítulo..."
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-grape-200">
-                Motivo do arquivamento
-              </label>
-              <input
-                type="text"
-                value={form.archive_reason}
-                onChange={(e) => setForm({ ...form, archive_reason: e.target.value })}
-                className="input"
-                placeholder="Ex: Substituído por versão revisada"
               />
             </div>
             {error && (
@@ -2055,14 +2257,11 @@ function ArchivedChaptersAdmin() {
       )}
 
       {confirmDelete && (
-        <Modal
-          open={!!confirmDelete}
-          onClose={() => setConfirmDelete(null)}
-          title="Confirmar exclusão"
-        >
+        <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Confirmar exclusão">
           <div className="space-y-4">
             <p className="text-grape-200">
-              Deseja realmente excluir o capítulo <strong>{confirmDelete.title}</strong> (nº {confirmDelete.chapter_number})?
+              Deseja realmente excluir o capítulo <strong>{confirmDelete.title}</strong> (nº{' '}
+              {confirmDelete.chapter_number})?
             </p>
             <div className="flex gap-3 pt-2">
               <button
@@ -2506,11 +2705,13 @@ function PuzzleForm({ item, onClose, onSaved }: { item: PuzzleGame | null; onClo
   const [pieces, setPieces] = useState(item?.piece_count ?? 9);
   const [reward, setReward] = useState(item?.reward_dantes ?? 15);
   const [isActive, setIsActive] = useState(item?.is_active ?? true);
+  const [imageUrl, setImageUrl] = useState(item?.image_url ?? '');
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
+    if (!imageUrl.trim()) return toast('Envie ou informe a imagem do quebra-cabeça.', 'error');
     setSaving(true);
-    const payload = { piece_count: pieces, reward_dantes: reward, is_active: isActive };
+    const payload = { piece_count: pieces, reward_dantes: reward, is_active: isActive, image_url: imageUrl.trim() };
     const { error } = item ? await supabase.from('puzzle_games').update(payload).eq('id', item.id) : await supabase.from('puzzle_games').insert(payload);
     setSaving(false);
     if (error) return toast('Erro ao salvar.', 'error');
@@ -2520,6 +2721,13 @@ function PuzzleForm({ item, onClose, onSaved }: { item: PuzzleGame | null; onClo
   return (
     <Modal open onClose={onClose} title={item ? 'Editar Quebra-Cabeça' : 'Novo Quebra-Cabeça'} maxWidth="max-w-md">
       <div className="space-y-4">
+        <ImageUpload
+          label="Imagem do quebra-cabeça"
+          folder="puzzles"
+          currentUrl={imageUrl}
+          onUploaded={(url) => setImageUrl(url)}
+        />
+        <div><label className="label">URL da imagem</label><input type="text" className="input" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." /></div>
         <div><label className="label">Quantidade de Peças</label><input type="number" className="input w-32" value={pieces} onChange={(e) => setPieces(Number(e.target.value))} /></div>
         <div><label className="label">Recompensa (Dantes)</label><input type="number" className="input w-32" value={reward} onChange={(e) => setReward(Number(e.target.value))} /></div>
         <div className="flex items-center gap-2"><input type="checkbox" id="pz-active" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="h-4 w-4" /><label htmlFor="pz-active" className="text-sm text-grape-200">Ativo</label></div>
