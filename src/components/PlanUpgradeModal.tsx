@@ -3,7 +3,7 @@ import type { PlanType } from '@/lib/supabase';
 import { PLANS } from '@/lib/plans';
 import { Modal } from '@/components/Modal';
 import { useState } from 'react';
-import { supabase, SUPABASE_URL } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/Toast';
 
 export function PlanUpgradeModal({
