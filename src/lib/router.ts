@@ -85,10 +85,10 @@ export function routeToPath(route: Route): string {
       return '/termos';
     case 'privacy':
       return '/privacidade';
-    case 'arquivados':
-      return '/capitulos-arquivados';
-    case 'arquivado':
-      return `/capitulos-arquivados/${route.id}`;
+    case 'biblioteca':
+      return route.cat ? `/biblioteca/${route.cat}` : '/biblioteca';
+    case 'biblioteca_cap':
+      return `/biblioteca/${route.cat}/${route.slug}`;
     case 'sobre':
       return '/sobre';
     case 'contato':
