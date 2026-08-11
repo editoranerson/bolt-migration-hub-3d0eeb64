@@ -83,10 +83,10 @@ function Routed() {
       return <TermsPage />;
     case 'privacy':
       return <PrivacyPage />;
-    case 'arquivados':
-      return <ArchivedChaptersPage />;
-    case 'arquivado':
-      return <ArchivedChapterDetailPage id={route.id} />;
+    case 'biblioteca':
+      return <BibliotecaPage cat={route.cat} />;
+    case 'biblioteca_cap':
+      return <BibliotecaChapterPage cat={route.cat} slug={route.slug} />;
     case 'sobre':
       return <SobrePage />;
     case 'contato':
