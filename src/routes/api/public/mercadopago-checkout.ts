@@ -26,8 +26,11 @@ export const Route = createFileRoute('/api/public/mercadopago-checkout')({
           const authHeader = request.headers.get('Authorization') ?? '';
           if (!authHeader.startsWith('Bearer ')) return json({ error: 'Não autenticado.' }, 401);
 
+          const supabaseUrl = (process.env['MEU_SUPABASE_URL'] ?? '')
+            .replace(/\/rest\/v1\/?$/, '')
+            .replace(/\/$/, '');
           const supabase = createClient(
-            process.env['MEU_SUPABASE_URL']!,
+            supabaseUrl,
             process.env['MEU_SUPABASE_ANON_KEY']!,
             { auth: { persistSession: false, autoRefreshToken: false } },
           );
