@@ -27,7 +27,7 @@ export function PlanUpgradeModal({
         toast('Você precisa estar logado.', 'error');
         return;
       }
-      const apiUrl = `${SUPABASE_URL}/functions/v1/mercadopago-checkout`;
+      const apiUrl = '/api/public/mercadopago-checkout';
       const res = await fetch(apiUrl, {
         method: 'POST',
         headers: {

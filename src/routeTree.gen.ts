@@ -10,33 +10,44 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicMercadopagoCheckoutRouteImport } from './routes/api/public/mercadopago-checkout'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMercadopagoCheckoutRoute =
+  ApiPublicMercadopagoCheckoutRouteImport.update({
+    id: '/api/public/mercadopago-checkout',
+    path: '/api/public/mercadopago-checkout',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/mercadopago-checkout': typeof ApiPublicMercadopagoCheckoutRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/mercadopago-checkout': typeof ApiPublicMercadopagoCheckoutRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/mercadopago-checkout': typeof ApiPublicMercadopagoCheckoutRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/public/mercadopago-checkout'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/mercadopago-checkout'
+  id: '__root__' | '/' | '/api/public/mercadopago-checkout'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicMercadopagoCheckoutRoute: typeof ApiPublicMercadopagoCheckoutRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +59,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mercadopago-checkout': {
+      id: '/api/public/mercadopago-checkout'
+      path: '/api/public/mercadopago-checkout'
+      fullPath: '/api/public/mercadopago-checkout'
+      preLoaderRoute: typeof ApiPublicMercadopagoCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicMercadopagoCheckoutRoute: ApiPublicMercadopagoCheckoutRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
