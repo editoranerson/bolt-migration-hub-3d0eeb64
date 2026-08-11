@@ -13,8 +13,8 @@ export type Route =
   | { name: 'profile' }
   | { name: 'terms' }
   | { name: 'privacy' }
-  | { name: 'arquivados' }
-  | { name: 'arquivado'; id: string }
+  | { name: 'biblioteca'; cat?: string }
+  | { name: 'biblioteca_cap'; cat: string; slug: string }
   | { name: 'sobre' }
   | { name: 'contato' }
   | { name: 'faq' }
