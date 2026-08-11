@@ -3,7 +3,7 @@ import type { PlanType } from '@/lib/supabase';
 import { PLANS } from '@/lib/plans';
 import { Modal } from '@/components/Modal';
 import { useState } from 'react';
-import { supabase, SUPABASE_URL } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/Toast';
 
 export function PlanUpgradeModal({
@@ -27,7 +27,7 @@ export function PlanUpgradeModal({
         toast('Você precisa estar logado.', 'error');
         return;
       }
-      const apiUrl = `${SUPABASE_URL}/functions/v1/mercadopago-checkout`;
+      const apiUrl = '/api/public/mercadopago-checkout';
       const res = await fetch(apiUrl, {
         method: 'POST',
         headers: {

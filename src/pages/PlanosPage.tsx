@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Check, Crown, Diamond, Plus, Sparkles, Loader2 } from 'lucide-react';
 import { PLANS } from '@/lib/plans';
-import { supabase, SUPABASE_URL, type PlanType } from '@/lib/supabase';
+import { supabase, type PlanType } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/components/Toast';
 import { navigateTo } from '@/lib/router';
@@ -29,7 +29,7 @@ export function PlanosPage() {
         navigateTo({ name: 'login' });
         return;
       }
-      const apiUrl = `${SUPABASE_URL}/functions/v1/mercadopago-checkout`;
+      const apiUrl = '/api/public/mercadopago-checkout';
       const res = await fetch(apiUrl, {
         method: 'POST',
         headers: {
