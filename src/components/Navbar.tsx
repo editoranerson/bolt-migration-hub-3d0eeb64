@@ -10,7 +10,7 @@ const NAV_ITEMS: { label: string; route: Route }[] = [
   { label: 'Home', route: { name: 'home' } },
   { label: 'Personagens', route: { name: 'personagens' } },
   { label: 'Segredos', route: { name: 'segredos' } },
-  { label: 'Capítulos Arquivados', route: { name: 'arquivados' } },
+  { label: 'Biblioteca', route: { name: 'biblioteca' } },
   { label: 'Playlist', route: { name: 'playlist' } },
   { label: 'Álbum de Cartas', route: { name: 'album' } },
   { label: 'Tarefas', route: { name: 'tarefas' } },
