@@ -2506,11 +2506,13 @@ function PuzzleForm({ item, onClose, onSaved }: { item: PuzzleGame | null; onClo
   const [pieces, setPieces] = useState(item?.piece_count ?? 9);
   const [reward, setReward] = useState(item?.reward_dantes ?? 15);
   const [isActive, setIsActive] = useState(item?.is_active ?? true);
+  const [imageUrl, setImageUrl] = useState(item?.image_url ?? '');
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
+    if (!imageUrl.trim()) return toast('Envie ou informe a imagem do quebra-cabeça.', 'error');
     setSaving(true);
-    const payload = { piece_count: pieces, reward_dantes: reward, is_active: isActive };
+    const payload = { piece_count: pieces, reward_dantes: reward, is_active: isActive, image_url: imageUrl.trim() };
     const { error } = item ? await supabase.from('puzzle_games').update(payload).eq('id', item.id) : await supabase.from('puzzle_games').insert(payload);
     setSaving(false);
     if (error) return toast('Erro ao salvar.', 'error');
@@ -2520,6 +2522,13 @@ function PuzzleForm({ item, onClose, onSaved }: { item: PuzzleGame | null; onClo
   return (
     <Modal open onClose={onClose} title={item ? 'Editar Quebra-Cabeça' : 'Novo Quebra-Cabeça'} maxWidth="max-w-md">
       <div className="space-y-4">
+        <ImageUpload
+          label="Imagem do quebra-cabeça"
+          folder="puzzles"
+          currentUrl={imageUrl}
+          onUploaded={(url) => setImageUrl(url)}
+        />
+        <div><label className="label">URL da imagem</label><input type="text" className="input" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." /></div>
         <div><label className="label">Quantidade de Peças</label><input type="number" className="input w-32" value={pieces} onChange={(e) => setPieces(Number(e.target.value))} /></div>
         <div><label className="label">Recompensa (Dantes)</label><input type="number" className="input w-32" value={reward} onChange={(e) => setReward(Number(e.target.value))} /></div>
         <div className="flex items-center gap-2"><input type="checkbox" id="pz-active" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="h-4 w-4" /><label htmlFor="pz-active" className="text-sm text-grape-200">Ativo</label></div>
