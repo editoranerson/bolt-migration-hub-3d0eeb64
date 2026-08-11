@@ -57,6 +57,7 @@ import {
   type QuizQuestion,
   type ShopItem,
   type ShopRedemption,
+  type LibraryCategory,
   type RewardType,
   type RedemptionStatus,
 } from '@/lib/supabase';
@@ -77,7 +78,7 @@ type AdminTab =
   | 'conversas'
   | 'conhecimento'
   | 'textos'
-  | 'arquivados'
+  | 'biblioteca'
   | 'mensagens'
   | 'faq'
   | 'minijogos'
@@ -96,7 +97,7 @@ const TABS: { id: AdminTab; label: string; icon: typeof Shield }[] = [
   { id: 'conversas', label: 'Conversas', icon: MessageSquare },
   { id: 'conhecimento', label: 'Conhecimento', icon: Brain },
   { id: 'textos', label: 'Textos do Site', icon: FileText },
-  { id: 'arquivados', label: 'Arquivados', icon: Archive },
+  { id: 'biblioteca', label: 'Biblioteca', icon: Archive },
   { id: 'mensagens', label: 'Mensagens', icon: Mail },
   { id: 'faq', label: 'FAQ', icon: HelpCircle },
   { id: 'minijogos', label: 'Minijogos', icon: Gamepad2 },
@@ -146,7 +147,7 @@ export function AdminPage() {
       {tab === 'conversas' && <ConversationsAdmin />}
       {tab === 'conhecimento' && <KnowledgeAdmin />}
       {tab === 'textos' && <ContentAdmin />}
-      {tab === 'arquivados' && <ArchivedChaptersAdmin />}
+      {tab === 'biblioteca' && <LibraryAdmin />}
       {tab === 'mensagens' && <ContactMessagesAdmin />}
       {tab === 'faq' && <FaqAdmin />}
       {tab === 'minijogos' && <MinijogosAdmin />}
