@@ -49,41 +49,31 @@ export const Route = createFileRoute('/api/public/mercadopago-checkout')({
           const plan = PLANS[planId];
           if (!plan) return json({ error: `Plano inválido: ${planId}` }, 400);
 
-          // back_urls precisa ser https absoluto, senão o Mercado Pago rejeita auto_return.
-          const successUrl = /^https:\/\//.test(body.success_url ?? '') ? body.success_url! : '';
+          // back_url precisa ser https absoluto para assinaturas.
+          const backUrl = /^https:\/\//.test(body.success_url ?? '') ? body.success_url! : '';
 
-          const preference: Record<string, unknown> = {
-            items: [
-              {
-                id: planId,
-                title: plan.title,
-                description: `Assinatura mensal ${plan.title}`,
-                quantity: 1,
-                currency_id: 'BRL',
-                unit_price: plan.price,
-              },
-            ],
-            payer: { email: userData.user.email },
+          // Assinatura recorrente mensal (Preapproval).
+          const preapproval: Record<string, unknown> = {
+            reason: `Assinatura mensal ${plan.title}`,
             external_reference: `${userData.user.id}:${planId}`,
-            metadata: { user_id: userData.user.id, plan: planId },
+            payer_email: userData.user.email,
+            auto_recurring: {
+              frequency: 1,
+              frequency_type: 'months',
+              transaction_amount: plan.price,
+              currency_id: 'BRL',
+            },
+            status: 'pending',
           };
+          if (backUrl) preapproval['back_url'] = backUrl;
 
-          if (successUrl) {
-            preference['back_urls'] = {
-              success: successUrl,
-              failure: successUrl,
-              pending: successUrl,
-            };
-            preference['auto_return'] = 'approved';
-          }
-
-          const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+          const mpRes = await fetch('https://api.mercadopago.com/preapproval', {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(preference),
+            body: JSON.stringify(preapproval),
           });
 
           const raw = await mpRes.text();
