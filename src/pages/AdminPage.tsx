@@ -65,6 +65,7 @@ import { useToast } from '@/components/Toast';
 import { Modal } from '@/components/Modal';
 import { ImageUpload } from '@/components/ImageUpload';
 import { MarkdownBlock } from '@/components/Footer';
+import { ChatstoryAdmin } from '@/components/admin/ChatstoryAdmin';
 
 type AdminTab =
   | 'personagens'
@@ -79,6 +80,7 @@ type AdminTab =
   | 'conhecimento'
   | 'textos'
   | 'biblioteca'
+  | 'chatstory'
   | 'mensagens'
   | 'faq'
   | 'minijogos'
@@ -98,6 +100,7 @@ const TABS: { id: AdminTab; label: string; icon: typeof Shield }[] = [
   { id: 'conhecimento', label: 'Conhecimento', icon: Brain },
   { id: 'textos', label: 'Textos do Site', icon: FileText },
   { id: 'biblioteca', label: 'Biblioteca', icon: Archive },
+  { id: 'chatstory', label: 'Chatstory', icon: MessageSquare },
   { id: 'mensagens', label: 'Mensagens', icon: Mail },
   { id: 'faq', label: 'FAQ', icon: HelpCircle },
   { id: 'minijogos', label: 'Minijogos', icon: Gamepad2 },
@@ -148,6 +151,7 @@ export function AdminPage() {
       {tab === 'conhecimento' && <KnowledgeAdmin />}
       {tab === 'textos' && <ContentAdmin />}
       {tab === 'biblioteca' && <LibraryAdmin />}
+      {tab === 'chatstory' && <ChatstoryAdmin />}
       {tab === 'mensagens' && <ContactMessagesAdmin />}
       {tab === 'faq' && <FaqAdmin />}
       {tab === 'minijogos' && <MinijogosAdmin />}
