@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { TouchEvent as ReactTouchEvent } from 'react';
 import { Gamepad2, Heart, Puzzle, Brain, Trophy, RotateCcw, Check, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { getEffectivePlan } from '@/lib/plans';
@@ -320,7 +321,7 @@ function PuzzleGame_() {
 
   // --- touch ---
   const onTouchStart = (i: number) => setDragIndex(i);
-  const onTouchMove = (e: React.TouchEvent) => {
+  const onTouchMove = (e: ReactTouchEvent) => {
     const t = e.touches[0];
     const el = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement | null;
     const idxAttr = el?.closest('[data-piece-index]')?.getAttribute('data-piece-index');
@@ -462,14 +463,13 @@ function PuzzleGame_() {
                   : undefined
               }
             >
-              <span
-                className={`pointer-events-none absolute bottom-1 right-1.5 text-xs font-bold ${
-                  imageUrl ? 'text-white/80 drop-shadow' : ''
-                }`}
-              >
-                {val}
-              </span>
-              {!imageUrl && <span className="pointer-events-none">{val}</span>}
+              {imageUrl ? (
+                <span className="pointer-events-none absolute bottom-1 right-1.5 text-xs font-bold text-white/80 drop-shadow">
+                  {val}
+                </span>
+              ) : (
+                <span className="pointer-events-none">{val}</span>
+              )}
             </div>
           );
         })}
