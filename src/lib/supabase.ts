@@ -264,3 +264,43 @@ export const CARD_TYPE_BORDER: Record<CardType, string> = {
   conquista: 'bg-card-conquista',
   premium: 'bg-card-premium',
 };
+
+export interface ChatstoryCharacter {
+  id: string;
+  name: string;
+  avatar_url: string;
+  created_at: string;
+}
+
+export interface Chatstory {
+  id: string;
+  title: string;
+  slug: string;
+  cover_url: string;
+  synopsis: string;
+  is_published: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface ChatstoryChapter {
+  id: string;
+  story_id: string;
+  title: string;
+  slug: string;
+  sort_order: number;
+  is_published: boolean;
+  created_at: string;
+}
+
+export type ChatstoryElementKind = 'message' | 'narration';
+
+export interface ChatstoryElement {
+  id: string;
+  chapter_id: string;
+  kind: ChatstoryElementKind;
+  character_id: string | null;
+  content: string;
+  sort_order: number;
+  created_at: string;
+}

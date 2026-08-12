@@ -21,6 +21,9 @@ export type Route =
   | { name: 'loja' }
   | { name: 'minijogos' }
   | { name: 'planos' }
+  | { name: 'chatstorys' }
+  | { name: 'chatstory'; slug: string }
+  | { name: 'chatstory_cap'; slug: string; cap: string }
   | { name: 'diag' };
 
 function parsePath(path: string): Route {
@@ -43,7 +46,13 @@ function parsePath(path: string): Route {
   if (path === '/loja') return { name: 'loja' };
   if (path === '/minijogos') return { name: 'minijogos' };
   if (path === '/planos') return { name: 'planos' };
+  if (path === '/chatstorys' || path === '/chatstory') return { name: 'chatstorys' };
   if (path === '/diag') return { name: 'diag' };
+
+  const csCap = path.match(/^\/chatstorys\/([^/]+)\/(.+)$/);
+  if (csCap) return { name: 'chatstory_cap', slug: csCap[1], cap: csCap[2] };
+  const csStory = path.match(/^\/chatstorys\/([^/]+)$/);
+  if (csStory) return { name: 'chatstory', slug: csStory[1] };
 
   const capMatch = path.match(/^\/biblioteca\/([^/]+)\/(.+)$/);
   if (capMatch) return { name: 'biblioteca_cap', cat: capMatch[1], slug: capMatch[2] };
@@ -101,6 +110,12 @@ export function routeToPath(route: Route): string {
       return '/minijogos';
     case 'planos':
       return '/planos';
+    case 'chatstorys':
+      return '/chatstorys';
+    case 'chatstory':
+      return `/chatstorys/${route.slug}`;
+    case 'chatstory_cap':
+      return `/chatstorys/${route.slug}/${route.cap}`;
     case 'diag':
       return '/diag';
   }

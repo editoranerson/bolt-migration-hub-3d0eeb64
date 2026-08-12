@@ -11,6 +11,7 @@ const NAV_ITEMS: { label: string; route: Route }[] = [
   { label: 'Personagens', route: { name: 'personagens' } },
   { label: 'Segredos', route: { name: 'segredos' } },
   { label: 'Biblioteca', route: { name: 'biblioteca' } },
+  { label: 'Chatstory', route: { name: 'chatstorys' } },
   { label: 'Playlist', route: { name: 'playlist' } },
   { label: 'Álbum de Cartas', route: { name: 'album' } },
   { label: 'Tarefas', route: { name: 'tarefas' } },

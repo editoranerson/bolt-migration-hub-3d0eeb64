@@ -27,6 +27,9 @@ import { FaqPage } from '@/pages/FaqPage';
 import { LojaPage } from '@/pages/LojaPage';
 import { MinijogosPage } from '@/pages/MinijogosPage';
 import { PlanosPage } from '@/pages/PlanosPage';
+import { ChatstoryListPage } from '@/pages/ChatstoryListPage';
+import { ChatstoryDetailPage } from '@/pages/ChatstoryDetailPage';
+import { ChatstoryReaderPage } from '@/pages/ChatstoryReaderPage';
 
 function Routed() {
   const { route } = useRouter();
@@ -109,6 +112,12 @@ function Routed() {
       );
     case 'planos':
       return <PlanosPage />;
+    case 'chatstorys':
+      return <ChatstoryListPage />;
+    case 'chatstory':
+      return <ChatstoryDetailPage slug={route.slug} />;
+    case 'chatstory_cap':
+      return <ChatstoryReaderPage slug={route.slug} cap={route.cap} />;
     default:
       return <HomePage />;
   }
