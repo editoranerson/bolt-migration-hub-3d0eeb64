@@ -252,7 +252,7 @@ function HangmanGame_() {
   );
 }
 
-// ===================== PUZZLE (simplified sliding puzzle) =====================
+// ===================== PUZZLE (drag & drop, troca livre de peças) =====================
 function PuzzleGame_() {
   const { user, profile, refreshProfile } = useAuth();
   const rewardMultiplier = profile && getEffectivePlan(profile) !== 'free' ? 2 : 1;
@@ -263,6 +263,8 @@ function PuzzleGame_() {
   const [solved, setSolved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [moves, setMoves] = useState(0);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     supabase
@@ -280,46 +282,54 @@ function PuzzleGame_() {
     setCurrent(g);
     setSolved(false);
     setMoves(0);
-    const n = g.piece_count;
-    const arr = Array.from({ length: n }, (_, i) => i);
-    // Shuffle
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
+    setDragIndex(null);
+    setOverIndex(null);
+    const n = Math.max(4, g.piece_count);
+    // peças 1..n, todas independentes (sem espaço vazio)
+    const arr = Array.from({ length: n }, (_, i) => i + 1);
+    do {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    } while (arr.every((v, i) => v === i + 1));
     setPieces(arr);
   };
 
-  const gridCols = current ? Math.ceil(Math.sqrt(current.piece_count)) : 3;
+  const gridCols = current ? Math.ceil(Math.sqrt(Math.max(4, current.piece_count))) : 3;
 
-  const handlePieceClick = (index: number) => {
-    if (solved) return;
-    const n = pieces.length;
-    const grid = gridCols;
-    const row = Math.floor(index / grid);
-    const col = index % grid;
-
-    // Find empty (0 = empty slot)
-    const emptyIdx = pieces.indexOf(0);
-    const emptyRow = Math.floor(emptyIdx / grid);
-    const emptyCol = emptyIdx % grid;
-
-    const adjacent = (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
-                     (Math.abs(col - emptyCol) === 1 && row === emptyRow);
-
-    if (!adjacent) return;
-
-    const newPieces = [...pieces];
-    [newPieces[index], newPieces[emptyIdx]] = [newPieces[emptyIdx], newPieces[index]];
-    setPieces(newPieces);
-    setMoves(moves + 1);
-
-    // Check solved (all in order, 0 at end)
-    const isSolved = newPieces.slice(0, -1).every((val, i) => val === i + 1) && newPieces[newPieces.length - 1] === 0;
-    if (isSolved) {
+  const swap = (from: number, to: number) => {
+    if (solved || from === to) return;
+    const next = [...pieces];
+    [next[from], next[to]] = [next[to], next[from]];
+    setPieces(next);
+    setMoves((m) => m + 1);
+    if (next.every((v, i) => v === i + 1)) {
       setSolved(true);
       awardWin();
     }
+  };
+
+  // --- mouse (HTML5 drag) ---
+  const onDragStart = (i: number) => setDragIndex(i);
+  const onDrop = (i: number) => {
+    if (dragIndex !== null) swap(dragIndex, i);
+    setDragIndex(null);
+    setOverIndex(null);
+  };
+
+  // --- touch ---
+  const onTouchStart = (i: number) => setDragIndex(i);
+  const onTouchMove = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    const el = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement | null;
+    const idxAttr = el?.closest('[data-piece-index]')?.getAttribute('data-piece-index');
+    setOverIndex(idxAttr != null ? Number(idxAttr) : null);
+  };
+  const onTouchEnd = () => {
+    if (dragIndex !== null && overIndex !== null) swap(dragIndex, overIndex);
+    setDragIndex(null);
+    setOverIndex(null);
   };
 
   const awardWin = async () => {
@@ -377,6 +387,8 @@ function PuzzleGame_() {
     );
   }
 
+  const imageUrl = current.image_url;
+
   return (
     <div className="card border border-white/10 bg-ink-800/40 p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -394,28 +406,73 @@ function PuzzleGame_() {
 
       {solved && (
         <div className="mb-4 rounded-xl bg-emerald-500/10 px-4 py-3 text-center text-emerald-400">
-          <Check size={20} className="mb-1 inline" /> Resolvido em {moves} movimentos! +{current.reward_dantes} Dantes!
+          <Check size={20} className="mb-1 inline" /> Resolvido em {moves} movimentos! +
+          {current.reward_dantes * rewardMultiplier} Dantes!
         </div>
       )}
 
       <div
-        className="mx-auto grid gap-1.5 rounded-xl bg-ink-950/40 p-2"
+        className="mx-auto grid touch-none gap-1.5 rounded-xl bg-ink-950/40 p-2"
         style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)`, maxWidth: '360px' }}
       >
-        {pieces.map((val, i) => (
-          <button
-            key={i}
-            onClick={() => handlePieceClick(i)}
-            disabled={solved || val === 0}
-            className={`flex aspect-square items-center justify-center rounded-lg text-lg font-bold transition ${
-              val === 0
-                ? 'bg-transparent'
-                : 'border border-white/10 bg-gradient-to-br from-grape-500/60 to-rose-500/60 text-white hover:from-grape-500/80 hover:to-rose-500/80'
-            }`}
-          >
-            {val === 0 ? '' : val}
-          </button>
-        ))}
+        {pieces.map((val, i) => {
+          const total = pieces.length;
+          const rows = Math.ceil(total / gridCols);
+          const srcRow = Math.floor((val - 1) / gridCols);
+          const srcCol = (val - 1) % gridCols;
+          const isDragging = dragIndex === i;
+          const isOver = overIndex === i && dragIndex !== null && dragIndex !== i;
+          return (
+            <div
+              key={i}
+              data-piece-index={i}
+              draggable={!solved}
+              onDragStart={() => onDragStart(i)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setOverIndex(i);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                onDrop(i);
+              }}
+              onDragEnd={() => {
+                setDragIndex(null);
+                setOverIndex(null);
+              }}
+              onTouchStart={() => onTouchStart(i)}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              className={`relative flex aspect-square cursor-grab select-none items-center justify-center overflow-hidden rounded-lg border text-lg font-bold text-white transition active:cursor-grabbing ${
+                isDragging
+                  ? 'scale-95 border-gold-400/70 opacity-70'
+                  : isOver
+                    ? 'border-gold-400 ring-2 ring-gold-400/60'
+                    : 'border-white/10'
+              } ${imageUrl ? 'bg-ink-900' : 'bg-gradient-to-br from-grape-500/60 to-rose-500/60'}`}
+              style={
+                imageUrl
+                  ? {
+                      backgroundImage: `url(${imageUrl})`,
+                      backgroundSize: `${gridCols * 100}% ${rows * 100}%`,
+                      backgroundPosition: `${gridCols > 1 ? (srcCol / (gridCols - 1)) * 100 : 0}% ${
+                        rows > 1 ? (srcRow / (rows - 1)) * 100 : 0
+                      }%`,
+                    }
+                  : undefined
+              }
+            >
+              <span
+                className={`pointer-events-none absolute bottom-1 right-1.5 text-xs font-bold ${
+                  imageUrl ? 'text-white/80 drop-shadow' : ''
+                }`}
+              >
+                {val}
+              </span>
+              {!imageUrl && <span className="pointer-events-none">{val}</span>}
+            </div>
+          );
+        })}
       </div>
 
       {solved && (
@@ -427,11 +484,12 @@ function PuzzleGame_() {
       )}
 
       <p className="mt-4 text-center text-xs text-grape-200/40">
-        Toque em uma peça adjacente ao espaço vazio para movimentá-la.
+        Arraste uma peça sobre a outra para trocá-las de lugar. Organize as peças em ordem para concluir.
       </p>
     </div>
   );
 }
+
 
 // ===================== QUIZ =====================
 function QuizGame_() {
