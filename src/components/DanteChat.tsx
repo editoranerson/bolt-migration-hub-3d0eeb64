@@ -82,6 +82,12 @@ export function DanteChat() {
         return;
       }
 
+      const now = new Date();
+      const fmt = (opts: Intl.DateTimeFormatOptions) =>
+        new Intl.DateTimeFormat('pt-BR', opts).format(now);
+
+      const messageBody = `[Contexto de Tempo Real: Hoje é ${fmt({ weekday: 'long' })}, ${fmt({ day: '2-digit', month: '2-digit', year: 'numeric' })}, às ${fmt({ hour: '2-digit', minute: '2-digit', hour12: false })}]\n\nMensagem do usuário: ${userMsg.content}`;
+
       const apiUrl = `${SUPABASE_URL}/functions/v1/chat-dante`;
       const res = await fetch(apiUrl, {
         method: 'POST',
@@ -90,25 +96,7 @@ export function DanteChat() {
           Authorization: `Bearer ${session.session.access_token}`,
         },
         body: JSON.stringify({
-          message: userMsg.content,
-          // Contexto temporal em tempo real (relógio do navegador do usuário)
-          client_datetime: (() => {
-            const now = new Date();
-            const fmt = (opts: Intl.DateTimeFormatOptions) =>
-              new Intl.DateTimeFormat('pt-BR', opts).format(now);
-            return {
-              iso: now.toISOString(),
-              date: fmt({ day: '2-digit', month: '2-digit', year: 'numeric' }),
-              time: fmt({ hour: '2-digit', minute: '2-digit', hour12: false }),
-              weekday: fmt({ weekday: 'long' }),
-              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-              context: `Agora é ${fmt({ weekday: 'long' })}, ${fmt({
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-              })}, às ${fmt({ hour: '2-digit', minute: '2-digit', hour12: false })}.`,
-            };
-          })(),
+          message: messageBody,
         }),
       });
 
@@ -243,7 +231,7 @@ export function DanteChat() {
             className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm sm:hidden"
             onClick={() => setOpen(false)}
           />
-          <div className="dante-chat-window relative z-10 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-ink-900/95 shadow-2xl animate-slide-up sm:h-[600px] sm:max-h-[85vh] sm:rounded-2xl">
+          <div className="dante-chat-window relative z-10 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-ink-900/95 shadow-2xl animate-slide-up sm:h-[[...]
             {/* Header */}
             <div className="dante-chat-bar flex items-center justify-between border-b border-white/10 bg-ink-800/80 px-4 py-3">
               <div className="flex items-center gap-3">
@@ -347,7 +335,7 @@ export function DanteChat() {
                   disabled={loading}
                   placeholder="Escreva sua mensagem..."
                   rows={1}
-                  className="dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transition focus:border-grape-400 disabled:opacity-50"
+                  className="dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transitio[...]"
                   style={{ maxHeight: '120px' }}
                 />
                 <button
