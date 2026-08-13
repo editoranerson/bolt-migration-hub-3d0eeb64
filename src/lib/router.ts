@@ -62,10 +62,14 @@ function parsePath(path: string): Route {
   return { name: 'home' };
 }
 
-function parseHash(): Route {
+function parseLocation(): Route {
+  // Compatibilidade: se ainda houver um hash antigo (#/rota), converte para path real.
   const hash = window.location.hash.replace(/^#/, '');
-  const path = hash || '/';
-  return parsePath(path);
+  if (hash.startsWith('/')) {
+    window.history.replaceState({}, '', hash);
+    return parsePath(hash);
+  }
+  return parsePath(window.location.pathname || '/');
 }
 
 export function routeToPath(route: Route): string {
