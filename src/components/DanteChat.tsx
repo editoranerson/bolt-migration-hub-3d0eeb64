@@ -30,10 +30,13 @@ export function DanteChat() {
       .from('chat_messages')
       .select('*')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false })
+      .limit(20);
     if (data) {
+      // Reverse the results so the UI shows messages in chronological order
+      const rows = (data as ChatMessage[]).reverse();
       setMessages(
-        (data as ChatMessage[]).map((m) => ({
+        rows.map((m) => ({
           id: m.id,
           role: m.role,
           content: m.content,
@@ -86,7 +89,7 @@ export function DanteChat() {
       const fmt = (opts: Intl.DateTimeFormatOptions) =>
         new Intl.DateTimeFormat('pt-BR', opts).format(now);
 
-      const messageBody = `[Contexto de Tempo Real: Hoje é ${fmt({ weekday: 'long' })}, ${fmt({ day: '2-digit', month: '2-digit', year: 'numeric' })}, às ${fmt({ hour: '2-digit', minute: '2-digit', hour12: false })}]\n\nMensagem do usuário: ${userMsg.content}`;
+      const messageBody = `[Contexto de Tempo Real: Hoje é ${fmt({ weekday: 'long' })}, ${fmt({ day: '2-digit', month: '2-digit', year: 'numeric' })}, às ${fmt({ hour: '2-digit', minute: '2-digit', ...
 
       const apiUrl = `${SUPABASE_URL}/functions/v1/chat-dante`;
       const res = await fetch(apiUrl, {
@@ -231,7 +234,7 @@ export function DanteChat() {
             className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm sm:hidden"
             onClick={() => setOpen(false)}
           />
-          <div className="dante-chat-window relative z-10 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-ink-900/95 shadow-2xl animate-slide-up sm:h-auto">
+          <div className="dante-chat-window relative z-10 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-ink-900/95 shadow-2xl animate-slide-up s[...]"
             {/* Header */}
             <div className="dante-chat-bar flex items-center justify-between border-b border-white/10 bg-ink-800/80 px-4 py-3">
               <div className="flex items-center gap-3">
@@ -335,7 +338,7 @@ export function DanteChat() {
                   disabled={loading}
                   placeholder="Escreva sua mensagem..."
                   rows={1}
-                  className="dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transition-colors duration-150 focus:ring-2 focus:ring-grape-500/20"
+                  className="dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none tran[...]"
                   style={{ maxHeight: '120px' }}
                 />
                 <button
