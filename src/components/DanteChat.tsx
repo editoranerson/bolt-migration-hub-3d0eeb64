@@ -89,7 +89,8 @@ export function DanteChat() {
       const fmt = (opts: Intl.DateTimeFormatOptions) =>
         new Intl.DateTimeFormat('pt-BR', opts).format(now);
 
-      const messageBody = `[Contexto de Tempo Real: Hoje é ${fmt({ weekday: 'long' })}, ${fmt({ day: '2-digit', month: '2-digit', year: 'numeric' })}, às ${fmt({ hour: '2-digit', minute: '2-digit', ...
+      // Build the message body to send to the Dante edge function
+      const messageBody = userMsg.content;
 
       const apiUrl = `${SUPABASE_URL}/functions/v1/chat-dante`;
       const res = await fetch(apiUrl, {
