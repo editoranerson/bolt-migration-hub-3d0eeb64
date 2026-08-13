@@ -335,7 +335,7 @@ export function DanteChat() {
                   disabled={loading}
                   placeholder="Escreva sua mensagem..."
                   rows={1}
-                  className="dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none tran[...]]"
+                  className="dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transition-colors duration-150 focus:ring-2 focus:ring-grape-500/20"
                   style={{ maxHeight: '120px' }}
                 />
                 <button
