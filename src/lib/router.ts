@@ -125,27 +125,37 @@ export function routeToPath(route: Route): string {
   }
 }
 
+const ROUTE_EVENT = 'app:navigate';
+
 export function useRouter() {
-  const [route, setRoute] = useState<Route>(parseHash());
+  const [route, setRoute] = useState<Route>(parseLocation());
 
   useEffect(() => {
-    const onHash = () => {
-      setRoute(parseHash());
+    const onChange = () => {
+      setRoute(parseLocation());
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     };
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
+    window.addEventListener('popstate', onChange);
+    window.addEventListener(ROUTE_EVENT, onChange);
+    window.addEventListener('hashchange', onChange);
+    return () => {
+      window.removeEventListener('popstate', onChange);
+      window.removeEventListener(ROUTE_EVENT, onChange);
+      window.removeEventListener('hashchange', onChange);
+    };
   }, []);
 
-  const navigate = (r: Route) => {
-    window.location.hash = routeToPath(r);
-  };
+  const navigate = (r: Route) => navigateTo(r);
 
   return { route, navigate };
 }
 
 export function navigateTo(r: Route) {
-  window.location.hash = routeToPath(r);
+  const path = routeToPath(r);
+  if (window.location.pathname !== path || window.location.hash) {
+    window.history.pushState({}, '', path);
+  }
+  window.dispatchEvent(new Event(ROUTE_EVENT));
 }
 
 let returnRoute: Route | null = null;
