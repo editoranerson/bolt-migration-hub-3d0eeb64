@@ -89,7 +89,27 @@ export function DanteChat() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.session.access_token}`,
         },
-        body: JSON.stringify({ message: userMsg.content }),
+        body: JSON.stringify({
+          message: userMsg.content,
+          // Contexto temporal em tempo real (relógio do navegador do usuário)
+          client_datetime: (() => {
+            const now = new Date();
+            const fmt = (opts: Intl.DateTimeFormatOptions) =>
+              new Intl.DateTimeFormat('pt-BR', opts).format(now);
+            return {
+              iso: now.toISOString(),
+              date: fmt({ day: '2-digit', month: '2-digit', year: 'numeric' }),
+              time: fmt({ hour: '2-digit', minute: '2-digit', hour12: false }),
+              weekday: fmt({ weekday: 'long' }),
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              context: `Agora é ${fmt({ weekday: 'long' })}, ${fmt({
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })}, às ${fmt({ hour: '2-digit', minute: '2-digit', hour12: false })}.`,
+            };
+          })(),
+        }),
       });
 
       if (!res.ok) {
