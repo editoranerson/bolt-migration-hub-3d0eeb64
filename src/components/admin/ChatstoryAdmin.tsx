@@ -556,6 +556,7 @@ function ElementsAdmin({ chapter, onBack }: { chapter: ChatstoryChapter; onBack:
   const [loading, setLoading] = useState(true);
   const [kind, setKind] = useState<'message' | 'narration'>('message');
   const [characterId, setCharacterId] = useState('');
+  const [side, setSide] = useState<'left' | 'right'>('left');
   const [content, setContent] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -588,6 +589,7 @@ function ElementsAdmin({ chapter, onBack }: { chapter: ChatstoryChapter; onBack:
       chapter_id: chapter.id,
       kind,
       character_id: kind === 'message' ? characterId : null,
+      side: kind === 'message' ? side : null,
       content: content.trim(),
       sort_order: editingId ? items.find((i) => i.id === editingId)?.sort_order ?? items.length : items.length,
     };
@@ -656,6 +658,26 @@ function ElementsAdmin({ chapter, onBack }: { chapter: ChatstoryChapter; onBack:
                 </option>
               ))}
             </select>
+            <label className="label mt-3">Posição do balão</label>
+            <div className="flex gap-2">
+              {(
+                [
+                  { id: 'left', label: 'Esquerda' },
+                  { id: 'right', label: 'Direita' },
+                ] as const
+              ).map((s2) => (
+                <button
+                  key={s2.id}
+                  type="button"
+                  onClick={() => setSide(s2.id)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
+                    side === s2.id ? 'bg-white/15 text-grape-50' : 'border border-white/10 text-grape-200/70'
+                  }`}
+                >
+                  {s2.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         <div>
@@ -692,7 +714,9 @@ function ElementsAdmin({ chapter, onBack }: { chapter: ChatstoryChapter; onBack:
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold uppercase tracking-wide text-grape-200/50">
-                  {el.kind === 'narration' ? 'Narração' : charName(el.character_id)}
+                  {el.kind === 'narration'
+                    ? 'Narração'
+                    : `${charName(el.character_id)} · ${el.side === 'right' ? 'direita' : 'esquerda'}`}
                 </p>
                 <p className="whitespace-pre-wrap text-sm text-grape-100/85">{el.content}</p>
               </div>
@@ -701,6 +725,7 @@ function ElementsAdmin({ chapter, onBack }: { chapter: ChatstoryChapter; onBack:
                   setEditingId(el.id);
                   setKind(el.kind);
                   setCharacterId(el.character_id ?? '');
+                  setSide(el.side ?? 'left');
                   setContent(el.content);
                 }}
                 className="rounded-lg p-2 text-grape-200 hover:bg-white/10"

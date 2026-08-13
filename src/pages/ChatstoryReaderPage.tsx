@@ -117,7 +117,7 @@ export function ChatstoryReaderPage({ slug, cap }: { slug: string; cap: string }
     );
   }
 
-  // define quem é o "personagem principal" (primeiro a falar) para alinhar à esquerda
+  // fallback: se o admin não definiu o lado, o primeiro personagem a falar fica à esquerda
   const firstSpeaker = elements.find((e) => e.kind === 'message')?.character_id ?? null;
 
   return (
@@ -155,7 +155,9 @@ export function ChatstoryReaderPage({ slug, cap }: { slug: string; cap: string }
             );
           }
           const c = el.character_id ? charMap[el.character_id] : undefined;
-          const mine = el.character_id && el.character_id === firstSpeaker;
+          const mine = el.side
+            ? el.side === 'left'
+            : Boolean(el.character_id && el.character_id === firstSpeaker);
           return (
             <div
               key={el.id}

@@ -300,6 +300,7 @@ export interface ChatstoryElement {
   chapter_id: string;
   kind: ChatstoryElementKind;
   character_id: string | null;
+  side: 'left' | 'right' | null;
   content: string;
   sort_order: number;
   created_at: string;
