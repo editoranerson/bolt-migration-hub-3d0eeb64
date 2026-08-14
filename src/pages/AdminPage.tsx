@@ -32,6 +32,7 @@ import {
   ShoppingBag,
   Heart,
   Puzzle,
+  Moon,
 } from 'lucide-react';
 import {
   supabase,
@@ -66,6 +67,7 @@ import { Modal } from '@/components/Modal';
 import { ImageUpload } from '@/components/ImageUpload';
 import { MarkdownBlock } from '@/components/Footer';
 import { ChatstoryAdmin } from '@/components/admin/ChatstoryAdmin';
+import { BreaksAdmin } from '@/components/admin/BreaksAdmin';
 
 type AdminTab =
   | 'personagens'
@@ -85,7 +87,8 @@ type AdminTab =
   | 'faq'
   | 'minijogos'
   | 'loja'
-  | 'resgates';
+  | 'resgates'
+  | 'intervalos';
 
 const TABS: { id: AdminTab; label: string; icon: typeof Shield }[] = [
   { id: 'personagens', label: 'Personagens', icon: BookOpen },
@@ -106,6 +109,7 @@ const TABS: { id: AdminTab; label: string; icon: typeof Shield }[] = [
   { id: 'minijogos', label: 'Minijogos', icon: Gamepad2 },
   { id: 'loja', label: 'Loja', icon: ShoppingBag },
   { id: 'resgates', label: 'Resgates', icon: Gift },
+  { id: 'intervalos', label: 'Intervalos do Dante', icon: Moon },
 ];
 
 export function AdminPage() {
@@ -157,6 +161,7 @@ export function AdminPage() {
       {tab === 'minijogos' && <MinijogosAdmin />}
       {tab === 'loja' && <ShopAdmin />}
       {tab === 'resgates' && <RedemptionsAdmin />}
+      {tab === 'intervalos' && <BreaksAdmin />}
     </div>
   );
 }

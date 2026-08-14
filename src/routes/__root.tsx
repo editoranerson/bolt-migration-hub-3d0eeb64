@@ -102,11 +102,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
+        src: "https://www.googletagmanager.com/gtag/js?id=G-MBQYQH3791",
+        async: true,
+      },
+      {
+        children: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-MBQYQH3791');`,
+      },
+      {
         src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8156784789940885",
         async: true,
         crossOrigin: "anonymous",
       },
     ],
+
   }),
 
   shellComponent: RootShell,
