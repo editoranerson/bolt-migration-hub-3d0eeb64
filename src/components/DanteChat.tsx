@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, LogIn, UserPlus, Coins } from 'lucide-react';
+import { X, Send, LogIn, UserPlus, Coins, FlaskConical, Moon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/components/Toast';
 import { navigateTo } from '@/lib/router';
 import { supabase, SUPABASE_URL } from '@/lib/supabase';
 import type { ChatMessage } from '@/lib/supabase';
+import { fetchDanteBreaks, findActiveBreak, type DanteBreak } from '@/lib/danteBreaks';
 
 interface UIMessage {
   id: string;
@@ -22,6 +23,8 @@ export function DanteChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [credits, setCredits] = useState<number>(0);
+  const [breaks, setBreaks] = useState<DanteBreak[]>([]);
+  const [activeBreak, setActiveBreak] = useState<DanteBreak | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -54,6 +57,28 @@ export function DanteChat() {
   }, [open, user, profile, loadHistory]);
 
   useEffect(() => {
+    if (!open || isAdmin) return;
+    let cancelled = false;
+    fetchDanteBreaks(true).then((rows) => {
+      if (!cancelled) setBreaks(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, isAdmin]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      setActiveBreak(null);
+      return;
+    }
+    const update = () => setActiveBreak(findActiveBreak(breaks));
+    update();
+    const id = setInterval(update, 30000);
+    return () => clearInterval(id);
+  }, [breaks, isAdmin]);
+
+  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -68,7 +93,7 @@ export function DanteChat() {
   }, [input]);
 
   const sendMessage = async () => {
-    if (!input.trim() || loading || !user) return;
+    if (!input.trim() || loading || !user || activeBreak) return;
 
     const userMsg: UIMessage = {
       id: `temp-${Date.now()}`,
@@ -247,7 +272,12 @@ export function DanteChat() {
                   ∞
                 </div>
                 <div>
-                  <h3 className="font-display text-base font-semibold text-grape-50">Chat do Dante</h3>
+                  <h3 className="flex items-center gap-2 font-display text-base font-semibold text-grape-50">
+                    Dante
+                    <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-grape-200/80">
+                      <FlaskConical size={10} /> beta
+                    </span>
+                  </h3>
                   <p className="flex items-center gap-1 text-xs text-grape-200/60">
                     <Coins size={12} className="text-gold-400" />
                     {creditsLabel}
@@ -265,7 +295,14 @@ export function DanteChat() {
 
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-              {messages.length === 0 && !loading && (
+              {activeBreak && (
+                <div className="mb-2 flex flex-col items-center rounded-2xl border border-white/10 bg-ink-700/50 px-4 py-5 text-center">
+                  <Moon size={22} className="mb-2 text-grape-300" />
+                  <p className="text-sm text-grape-200/80">{activeBreak.message}</p>
+                </div>
+              )}
+
+              {messages.length === 0 && !loading && !activeBreak && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div
                     className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-bold text-white"
@@ -333,6 +370,12 @@ export function DanteChat() {
 
             {/* Input */}
             <div className="dante-chat-bar border-t border-white/10 bg-ink-800/80 p-3">
+              {activeBreak && (
+                <div className="mb-2 flex items-start gap-2 rounded-xl border border-white/10 bg-ink-700/50 px-3 py-2 text-xs text-grape-200/70">
+                  <Moon size={14} className="mt-0.5 flex-shrink-0" />
+                  <span>{activeBreak.message}</span>
+                </div>
+              )}
               <div className="flex items-end gap-2">
                 <textarea
                   ref={textareaRef}
@@ -347,15 +390,15 @@ export function DanteChat() {
                       sendMessage();
                     }
                   }}
-                  disabled={loading}
-                  placeholder="Escreva sua mensagem..."
+                  disabled={loading || !!activeBreak}
+                  placeholder={activeBreak ? 'Dante indisponível no momento...' : 'Escreva sua mensagem...'}
                   rows={1}
-                  className="dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transition"
+                  className={`dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transition ${activeBreak ? 'cursor-not-allowed opacity-50' : ''}`}
                   style={{ maxHeight: '120px' }}
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={loading || !input.trim()}
+                  disabled={loading || !input.trim() || !!activeBreak}
                   className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50"
                   style={{ background: 'linear-gradient(135deg, #80D8FF, #FF80AB)' }}
                   aria-label="Enviar"
