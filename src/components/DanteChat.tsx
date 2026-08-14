@@ -112,11 +112,19 @@ export function DanteChat() {
       }
 
       const now = new Date();
-      const fmt = (opts: Intl.DateTimeFormatOptions) =>
-        new Intl.DateTimeFormat('pt-BR', opts).format(now);
-
-      // Build the message body to send to the Dante edge function
-      const messageBody = userMsg.content;
+      const fmtDate = new Intl.DateTimeFormat('pt-BR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }).format(now);
+      const fmtTime = new Intl.DateTimeFormat('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short',
+      }).format(now);
+      const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(now);
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       const apiUrl = `${SUPABASE_URL}/functions/v1/chat-dante`;
       const res = await fetch(apiUrl, {
@@ -126,7 +134,15 @@ export function DanteChat() {
           Authorization: `Bearer ${session.session.access_token}`,
         },
         body: JSON.stringify({
-          message: messageBody,
+          message: userMsg.content,
+          client_datetime: {
+            iso: now.toISOString(),
+            date: fmtDate,
+            time: fmtTime,
+            weekday,
+            timezone: timeZone,
+            context: `Hoje é ${fmtDate} (${weekday}), horário local: ${fmtTime} (fuso ${timeZone}).`,
+          },
         }),
       });
 
