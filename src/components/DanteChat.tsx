@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, LogIn, UserPlus, Coins } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/components/Toast';
 import { navigateTo } from '@/lib/router';
@@ -235,7 +236,7 @@ export function DanteChat() {
             className="absolute inset-0 bg-ink-950/60 backdrop-blur-sm sm:hidden"
             onClick={() => setOpen(false)}
           />
-          <div className="dante-chat-window relative z-10 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-ink-900/95 shadow-2xl animate-slide-up sm:h-auto">
+          <div className="dante-chat-window relative z-10 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-ink-900/95 shadow-2xl animate-slide-up sm:h-auto sm:rounded-2xl">
             {/* Header */}
             <div className="dante-chat-bar flex items-center justify-between border-b border-white/10 bg-ink-800/80 px-4 py-3">
               <div className="flex items-center gap-3">
@@ -298,7 +299,17 @@ export function DanteChat() {
                         : 'dante-chat-bubble border border-white/10 bg-ink-700/60 text-grape-50'
                     }`}
                   >
-                    {msg.content}
+                    {msg.role === 'assistant' ? (
+                      <ReactMarkdown
+                        components={{
+                          p: ({ node, ...props }) => <p className="m-0" {...props} />,
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      msg.content
+                    )}
                   </div>
                 </div>
               ))}
@@ -339,7 +350,7 @@ export function DanteChat() {
                   disabled={loading}
                   placeholder="Escreva sua mensagem..."
                   rows={1}
-                  className="dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transition-all"
+                  className="dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transition"
                   style={{ maxHeight: '120px' }}
                 />
                 <button
