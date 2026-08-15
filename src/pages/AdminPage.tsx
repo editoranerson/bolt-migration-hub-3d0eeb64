@@ -68,6 +68,7 @@ import { ImageUpload } from '@/components/ImageUpload';
 import { MarkdownBlock } from '@/components/Footer';
 import { ChatstoryAdmin } from '@/components/admin/ChatstoryAdmin';
 import { BreaksAdmin } from '@/components/admin/BreaksAdmin';
+import { PowerAdmin } from '@/components/admin/PowerAdmin';
 
 type AdminTab =
   | 'personagens'
@@ -88,7 +89,8 @@ type AdminTab =
   | 'minijogos'
   | 'loja'
   | 'resgates'
-  | 'intervalos';
+  | 'intervalos'
+  | 'power';
 
 const TABS: { id: AdminTab; label: string; icon: typeof Shield }[] = [
   { id: 'personagens', label: 'Personagens', icon: BookOpen },
@@ -110,6 +112,7 @@ const TABS: { id: AdminTab; label: string; icon: typeof Shield }[] = [
   { id: 'loja', label: 'Loja', icon: ShoppingBag },
   { id: 'resgates', label: 'Resgates', icon: Gift },
   { id: 'intervalos', label: 'Intervalos do Dante', icon: Moon },
+  { id: 'power', label: 'Power do Dante', icon: Power },
 ];
 
 export function AdminPage() {
@@ -162,6 +165,7 @@ export function AdminPage() {
       {tab === 'loja' && <ShopAdmin />}
       {tab === 'resgates' && <RedemptionsAdmin />}
       {tab === 'intervalos' && <BreaksAdmin />}
+      {tab === 'power' && <PowerAdmin />}
     </div>
   );
 }

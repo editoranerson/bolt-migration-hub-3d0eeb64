@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, LogIn, UserPlus, Coins, FlaskConical, Moon } from 'lucide-react';
+import { X, Send, LogIn, UserPlus, Coins, FlaskConical, Moon, Power } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/components/Toast';
@@ -7,6 +7,7 @@ import { navigateTo } from '@/lib/router';
 import { supabase, SUPABASE_URL } from '@/lib/supabase';
 import type { ChatMessage } from '@/lib/supabase';
 import { fetchDanteBreaks, findActiveBreak, type DanteBreak } from '@/lib/danteBreaks';
+import { fetchDantePower, type DantePowerState } from '@/lib/dantePower';
 
 interface UIMessage {
   id: string;
@@ -25,6 +26,7 @@ export function DanteChat() {
   const [credits, setCredits] = useState<number>(0);
   const [breaks, setBreaks] = useState<DanteBreak[]>([]);
   const [activeBreak, setActiveBreak] = useState<DanteBreak | null>(null);
+  const [powerState, setPowerState] = useState<DantePowerState>({ enabled: true, message: '' });
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -62,6 +64,9 @@ export function DanteChat() {
     fetchDanteBreaks(true).then((rows) => {
       if (!cancelled) setBreaks(rows);
     });
+    fetchDantePower().then((s) => {
+      if (!cancelled) setPowerState(s);
+    });
     return () => {
       cancelled = true;
     };
@@ -92,8 +97,10 @@ export function DanteChat() {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [input]);
 
+  const powerOff = !isAdmin && !powerState.enabled;
+
   const sendMessage = async () => {
-    if (!input.trim() || loading || !user || activeBreak) return;
+    if (!input.trim() || loading || !user || activeBreak || powerOff) return;
 
     const userMsg: UIMessage = {
       id: `temp-${Date.now()}`,
@@ -317,6 +324,22 @@ export function DanteChat() {
                   <p className="text-sm text-grape-200/80">{activeBreak.message}</p>
                 </div>
               )}
+              {powerOff && (
+                <div className="mb-2 flex flex-col items-center rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-5 text-center">
+                  <Power size={22} className="mb-2 text-rose-300" />
+                  {powerState.message ? (
+                    <ReactMarkdown
+                      components={{
+                        p: ({ node, ...props }) => <p className="m-0 text-sm text-rose-100/90" {...props} />,
+                      }}
+                    >
+                      {powerState.message}
+                    </ReactMarkdown>
+                  ) : (
+                    <p className="text-sm text-rose-100/90">O Dante está offline no momento.</p>
+                  )}
+                </div>
+              )}
 
               {messages.length === 0 && !loading && !activeBreak && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -392,6 +415,16 @@ export function DanteChat() {
                   <span>{activeBreak.message}</span>
                 </div>
               )}
+              {powerOff && (
+                <div className="mb-2 flex items-start gap-2 rounded-xl border border-rose-400/20 bg-rose-500/10 px-3 py-2 text-xs text-rose-200/80">
+                  <Power size={14} className="mt-0.5 flex-shrink-0" />
+                  <span>
+                    {powerState.message
+                      ? powerState.message.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\[(.+?)\]\((.+?)\)/g, '$1')
+                      : 'O Dante está offline no momento.'}
+                  </span>
+                </div>
+              )}
               <div className="flex items-end gap-2">
                 <textarea
                   ref={textareaRef}
@@ -406,15 +439,15 @@ export function DanteChat() {
                       sendMessage();
                     }
                   }}
-                  disabled={loading || !!activeBreak}
-                  placeholder={activeBreak ? 'Dante indisponível no momento...' : 'Escreva sua mensagem...'}
+                  disabled={loading || !!activeBreak || powerOff}
+                  placeholder={activeBreak || powerOff ? 'Dante indisponível no momento...' : 'Escreva sua mensagem...'}
                   rows={1}
-                  className={`dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transition ${activeBreak ? 'cursor-not-allowed opacity-50' : ''}`}
+                  className={`dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transition ${activeBreak || powerOff ? 'cursor-not-allowed opacity-50' : ''}`}
                   style={{ maxHeight: '120px' }}
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={loading || !input.trim() || !!activeBreak}
+                  disabled={loading || !input.trim() || !!activeBreak || powerOff}
                   className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50"
                   style={{ background: 'linear-gradient(135deg, #80D8FF, #FF80AB)' }}
                   aria-label="Enviar"
