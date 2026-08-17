@@ -1,29 +1,7 @@
-import { useEffect, useState } from 'react';
 import { Sparkles, FileText, ShieldCheck, Info, Mail, HelpCircle } from 'lucide-react';
 import { navigateTo } from '@/lib/router';
-import { supabase, type SiteContent } from '@/lib/supabase';
-import { Modal } from './Modal';
 
 export function Footer() {
-  const [termsOpen, setTermsOpen] = useState(false);
-  const [privacyOpen, setPrivacyOpen] = useState(false);
-  const [terms, setTerms] = useState('');
-  const [privacy, setPrivacy] = useState('');
-
-  useEffect(() => {
-    supabase
-      .from('site_content')
-      .select('*')
-      .in('key', ['terms_of_use', 'privacy_policy'])
-      .then(({ data }) => {
-        const rows = (data as SiteContent[]) ?? [];
-        const t = rows.find((r) => r.key === 'terms_of_use');
-        const p = rows.find((r) => r.key === 'privacy_policy');
-        if (t) setTerms(t.value);
-        if (p) setPrivacy(p.value);
-      });
-  }, []);
-
   return (
     <footer className="mt-16 border-t border-white/10 bg-ink-950/60">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -49,13 +27,13 @@ export function Footer() {
               <Mail size={15} /> Contato
             </button>
             <button
-              onClick={() => setTermsOpen(true)}
+              onClick={() => navigateTo({ name: 'terms' })}
               className="inline-flex items-center gap-1.5 hover:text-grape-50"
             >
               <FileText size={15} /> Termos de Uso
             </button>
             <button
-              onClick={() => setPrivacyOpen(true)}
+              onClick={() => navigateTo({ name: 'privacy' })}
               className="inline-flex items-center gap-1.5 hover:text-grape-50"
             >
               <ShieldCheck size={15} /> Política de Privacidade
@@ -81,12 +59,6 @@ export function Footer() {
         </div>
       </div>
 
-      <Modal open={termsOpen} onClose={() => setTermsOpen(false)} title="Termos de Uso" maxWidth="max-w-2xl">
-        <MarkdownBlock text={terms} />
-      </Modal>
-      <Modal open={privacyOpen} onClose={() => setPrivacyOpen(false)} title="Política de Privacidade" maxWidth="max-w-2xl">
-        <MarkdownBlock text={privacy} />
-      </Modal>
     </footer>
   );
 }

@@ -141,14 +141,14 @@ export function ChatstoryReaderPage({ slug, cap }: { slug: string; cap: string }
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') advance();
         }}
-        className="min-h-[60vh] cursor-pointer select-none space-y-4 rounded-2xl border border-white/10 bg-ink-900/50 p-4 sm:p-6"
+        className="chatstory-reader min-h-[60vh] cursor-pointer select-none space-y-4 rounded-2xl border border-white/10 bg-ink-900/50 p-4 sm:p-6"
       >
         {elements.slice(0, visible).map((el) => {
           if (el.kind === 'narration') {
             return (
               <p
                 key={el.id}
-                className="animate-fade-in px-2 py-3 text-center text-sm italic leading-relaxed text-grape-200/70"
+                className="chatstory-narration animate-fade-in px-2 py-3 text-center text-sm italic leading-relaxed text-grape-200/70"
               >
                 {el.content}
               </p>
@@ -163,22 +163,22 @@ export function ChatstoryReaderPage({ slug, cap }: { slug: string; cap: string }
               key={el.id}
               className={`animate-fade-in flex items-end gap-2 ${mine ? 'justify-start' : 'flex-row-reverse'}`}
             >
-              <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border border-white/10 bg-ink-700">
+              <div className="chatstory-avatar h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border border-white/10 bg-ink-700">
                 {c?.avatar_url ? (
                   <img src={c.avatar_url} alt={c.name} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-xs font-bold text-grape-200/70">
+                  <div className="chatstory-avatar-text flex h-full w-full items-center justify-center text-xs font-bold text-grape-200/70">
                     {(c?.name ?? '?').slice(0, 1).toUpperCase()}
                   </div>
                 )}
               </div>
               <div className={`max-w-[78%] ${mine ? 'text-left' : 'text-right'}`}>
-                <span className="mb-1 block text-xs font-semibold text-grape-200/60">{c?.name ?? 'Alguém'}</span>
+                <span className="chatstory-char-name mb-1 block text-xs font-semibold text-grape-200/60">{c?.name ?? 'Alguém'}</span>
                 <div
                   className={`whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed text-white ${
                     mine
-                      ? 'rounded-bl-sm bg-white/10'
-                      : 'rounded-br-sm bg-gradient-to-br from-grape-500 to-rose-500'
+                      ? 'chatstory-bubble-left rounded-bl-sm bg-white/10'
+                      : 'chatstory-bubble-right rounded-br-sm bg-gradient-to-br from-grape-500 to-rose-500'
                   }`}
                 >
                   {el.content}
@@ -188,7 +188,7 @@ export function ChatstoryReaderPage({ slug, cap }: { slug: string; cap: string }
           );
         })}
 
-        {total === 0 && <p className="text-center text-grape-200/50">Este capítulo ainda não tem conteúdo.</p>}
+        {total === 0 && <p className="chatstory-narration text-center text-grape-200/50">Este capítulo ainda não tem conteúdo.</p>}
 
         <div ref={endRef} />
 

@@ -461,3 +461,35 @@ html.light option {
   background-color: #ffffff;
   color: #1a0f30;
 }
+
+/* ===================== CHATSTORY ===================== */
+/* Reader container in light mode */
+html.light .chatstory-reader {
+  background-color: rgba(245, 243, 250, 0.6) !important;
+  border-color: rgba(100, 80, 140, 0.15) !important;
+}
+/* Narration text in light mode */
+html.light .chatstory-narration {
+  color: #5e4480 !important;
+}
+/* Left (incoming) bubble in light mode */
+html.light .chatstory-bubble-left {
+  background-color: rgba(240, 235, 248, 0.8) !important;
+  color: #1a0f30 !important;
+}
+/* Right (outgoing) bubble keeps gradient but ensure readable */
+html.light .chatstory-bubble-right {
+  color: #ffffff !important;
+}
+/* Avatar placeholder bg in light mode */
+html.light .chatstory-avatar {
+  background-color: #e8e2f0 !important;
+  border-color: rgba(100, 80, 140, 0.15) !important;
+}
+html.light .chatstory-avatar-text {
+  color: #5e4480 !important;
+}
+/* Character name label in light mode */
+html.light .chatstory-char-name {
+  color: #6b5290 !important;
+}
