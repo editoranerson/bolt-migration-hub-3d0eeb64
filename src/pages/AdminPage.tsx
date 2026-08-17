@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Shield,
+  Zap,
   BookOpen,
   Eye,
   Music,
@@ -90,7 +91,8 @@ type AdminTab =
   | 'loja'
   | 'resgates'
   | 'intervalos'
-  | 'power';
+  | 'power'
+  | 'estatisticas';
 
 const TABS: { id: AdminTab; label: string; icon: typeof Shield }[] = [
   { id: 'personagens', label: 'Personagens', icon: BookOpen },
@@ -113,6 +115,7 @@ const TABS: { id: AdminTab; label: string; icon: typeof Shield }[] = [
   { id: 'resgates', label: 'Resgates', icon: Gift },
   { id: 'intervalos', label: 'Intervalos do Dante', icon: Moon },
   { id: 'power', label: 'Power do Dante', icon: Power },
+  { id: 'estatisticas', label: 'Estatísticas', icon: Zap },
 ];
 
 export function AdminPage() {
@@ -166,6 +169,7 @@ export function AdminPage() {
       {tab === 'resgates' && <RedemptionsAdmin />}
       {tab === 'intervalos' && <BreaksAdmin />}
       {tab === 'power' && <PowerAdmin />}
+      {tab === 'estatisticas' && <ChatStatsAdmin />}
     </div>
   );
 }
@@ -3064,6 +3068,116 @@ function RedemptionsAdmin() {
             </div>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Chat Statistics ---------- */
+type StatsRange = 'today' | 'week' | 'month' | 'all';
+
+function ChatStatsAdmin() {
+  const [range, setRange] = useState<StatsRange>('all');
+  const [stats, setStats] = useState<{ count: number; totalScore: number; avg: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const now = new Date();
+      let since: string | null = null;
+
+      if (range === 'today') {
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        since = start.toISOString();
+      } else if (range === 'week') {
+        const start = new Date(now);
+        start.setDate(start.getDate() - 7);
+        since = start.toISOString();
+      } else if (range === 'month') {
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        since = start.toISOString();
+      }
+
+      let query = supabase
+        .from('chat_messages')
+        .select('sarcasm_score, created_at')
+        .eq('role', 'assistant');
+
+      if (since) {
+        query = query.gte('created_at', since);
+      }
+
+      const { data, error } = await query;
+      setLoading(false);
+
+      if (error || !data) {
+        setStats({ count: 0, totalScore: 0, avg: 0 });
+        return;
+      }
+
+      const rows = data as { sarcasm_score: number | null; created_at: string }[];
+      const count = rows.length;
+      const validScores = rows.filter((r) => r.sarcasm_score != null);
+      const totalScore = validScores.reduce((sum, r) => sum + (r.sarcasm_score ?? 0), 0);
+      const avg = validScores.length > 0 ? totalScore / validScores.length : 0;
+
+      setStats({ count, totalScore, avg });
+    })();
+  }, [range]);
+
+  const ranges: { id: StatsRange; label: string }[] = [
+    { id: 'today', label: 'Hoje' },
+    { id: 'week', label: '7 dias' },
+    { id: 'month', label: 'Este mês' },
+    { id: 'all', label: 'Tudo' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="font-display text-xl font-semibold text-grape-50">Estatísticas do Dante</h2>
+        <p className="text-sm text-grape-200/60">Mensagens e sarcasmo do chat.</p>
+      </div>
+
+      <div className="flex gap-2">
+        {ranges.map((r) => (
+          <button
+            key={r.id}
+            onClick={() => setRange(r.id)}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              range === r.id
+                ? 'bg-gradient-to-r from-grape-500 to-rose-500 text-white'
+                : 'border border-white/10 text-grape-200/60 hover:bg-white/5'
+            }`}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <Empty text="Carregando..." />
+      ) : stats ? (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="card p-5 text-center">
+            <MessageSquare size={24} className="mx-auto mb-2 text-grape-300" />
+            <p className="text-3xl font-bold text-grape-50">{stats.count}</p>
+            <p className="text-sm text-grape-200/60">Mensagens do Dante</p>
+          </div>
+          <div className="card p-5 text-center">
+            <Zap size={24} className="mx-auto mb-2 text-gold-400" />
+            <p className="text-3xl font-bold text-grape-50">{stats.totalScore}</p>
+            <p className="text-sm text-grape-200/60">Sarcasmômetro total</p>
+          </div>
+          <div className="card p-5 text-center">
+            <Brain size={24} className="mx-auto mb-2 text-mint-400" />
+            <p className="text-3xl font-bold text-grape-50">{stats.avg.toFixed(1)}</p>
+            <p className="text-sm text-grape-200/60">Média de sarcasmo</p>
+          </div>
+        </div>
+      ) : (
+        <Empty text="Sem dados." />
       )}
     </div>
   );

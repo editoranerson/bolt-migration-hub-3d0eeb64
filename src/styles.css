@@ -445,6 +445,37 @@ html.light .border-white\/10.bg-ink-700\/60 {
   border-color: rgba(100, 80, 140, 0.15) !important;
 }
 
+/* Dante animated bubble border (dark mode) */
+.dante-bubble-border {
+  position: relative;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.dante-bubble-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(120deg, #60A5FA, #1E40AF, #60A5FA, #1E40AF);
+  background-size: 300% 300%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: dante-border-flow 4s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes dante-border-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+/* Light mode: keep animated border but slightly different shades */
+html.light .dante-bubble-border::before {
+  background: linear-gradient(120deg, #38BDF8, #1D4ED8, #38BDF8, #1D4ED8);
+  background-size: 300% 300%;
+}
+
 /* Modal in light mode */
 html.light .bg-ink-800 {
   background-color: #ffffff !important;

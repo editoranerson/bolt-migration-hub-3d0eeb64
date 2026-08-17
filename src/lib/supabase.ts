@@ -136,6 +136,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   created_at: string;
+  sarcasm_score?: number | null;
 }
 
 export interface Character {

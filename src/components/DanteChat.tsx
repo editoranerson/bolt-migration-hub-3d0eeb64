@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, LogIn, UserPlus, Coins, FlaskConical, Moon, Power } from 'lucide-react';
+import { X, Rocket, LogIn, UserPlus, Coins, FlaskConical, Moon, Power } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/components/Toast';
@@ -15,6 +15,25 @@ interface UIMessage {
   content: string;
 }
 
+const DANTE_GRADIENT = 'linear-gradient(135deg, #7F00FF, #FF007F)';
+
+function Sarcasmometer({ score }: { score: number }) {
+  const clamped = Math.max(0, Math.min(100, score));
+  const gradient = 'linear-gradient(to right, #38BDF8, #B5E853, #FFC226, #FF8C42, #EF4444)';
+  return (
+    <div className="mt-1.5 flex items-center gap-1.5" aria-hidden="true">
+      <div className="relative h-2 flex-1 overflow-hidden rounded-full" style={{ background: gradient }}>
+        <div
+          className="absolute top-1/2 -translate-y-1/2 text-xs leading-none transition-all duration-500 ease-out"
+          style={{ left: `calc(${clamped}% - 8px)` }}
+        >
+          ⚡
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function DanteChat() {
   const { user, profile, isAdmin, refreshProfile } = useAuth();
   const { toast } = useToast();
@@ -27,6 +46,7 @@ export function DanteChat() {
   const [breaks, setBreaks] = useState<DanteBreak[]>([]);
   const [activeBreak, setActiveBreak] = useState<DanteBreak | null>(null);
   const [powerState, setPowerState] = useState<DantePowerState>({ enabled: true, message: '' });
+  const [sarcasmScore, setSarcasmScore] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -39,7 +59,6 @@ export function DanteChat() {
       .order('created_at', { ascending: false })
       .limit(20);
     if (data) {
-      // Reverse the results so the UI shows messages in chronological order
       const rows = (data as ChatMessage[]).reverse();
       setMessages(
         rows.map((m) => ({
@@ -89,7 +108,6 @@ export function DanteChat() {
     }
   }, [messages, loading]);
 
-  // Auto-resize textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -110,6 +128,7 @@ export function DanteChat() {
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+    setSarcasmScore(null);
 
     try {
       const { data: session } = await supabase.auth.getSession();
@@ -187,6 +206,12 @@ export function DanteChat() {
       };
       setMessages((prev) => [...prev, aiMsg]);
 
+      if (typeof data.sarcasm_score === 'number' && !Number.isNaN(data.sarcasm_score)) {
+        setSarcasmScore(Math.max(0, Math.min(100, Math.round(data.sarcasm_score))));
+      } else {
+        setSarcasmScore(0);
+      }
+
       if (typeof data.credits === 'number') {
         setCredits(data.credits);
         await refreshProfile();
@@ -225,7 +250,7 @@ export function DanteChat() {
           <span className="absolute inset-0 rounded-full p-[3px] dante-border-glow">
             <span className="block h-full w-full rounded-full bg-white" />
           </span>
-          <span className="relative z-10 text-2xl font-bold gradient-dante-text">∞</span>
+          <span className="relative z-10 flex h-full w-full items-center justify-center text-2xl font-bold gradient-dante-text">∞</span>
         </button>
       )}
 
@@ -238,7 +263,7 @@ export function DanteChat() {
           <div className="relative z-10 w-full max-w-sm card bg-ink-800/95 p-6 animate-scale-in text-center">
             <div
               className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl font-bold"
-              style={{ background: 'linear-gradient(135deg, #80D8FF, #FF80AB)' }}
+              style={{ background: DANTE_GRADIENT }}
             >
               <span className="text-white">∞</span>
             </div>
@@ -290,7 +315,7 @@ export function DanteChat() {
               <div className="flex items-center gap-3">
                 <div
                   className="flex h-10 w-10 items-center justify-center rounded-xl text-xl font-bold text-white"
-                  style={{ background: 'linear-gradient(135deg, #80D8FF, #FF80AB)' }}
+                  style={{ background: DANTE_GRADIENT }}
                 >
                   ∞
                 </div>
@@ -345,7 +370,7 @@ export function DanteChat() {
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div
                     className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-bold text-white"
-                    style={{ background: 'linear-gradient(135deg, #80D8FF, #FF80AB)' }}
+                    style={{ background: DANTE_GRADIENT }}
                   >
                     ∞
                   </div>
@@ -363,7 +388,7 @@ export function DanteChat() {
                   {msg.role === 'assistant' && (
                     <div
                       className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
-                      style={{ background: 'linear-gradient(135deg, #80D8FF, #FF80AB)' }}
+                      style={{ background: DANTE_GRADIENT }}
                     >
                       ∞
                     </div>
@@ -372,7 +397,7 @@ export function DanteChat() {
                     className={`max-w-[75%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                       msg.role === 'user'
                         ? 'bg-gradient-to-r from-grape-500 to-rose-500 text-white'
-                        : 'dante-chat-bubble border border-white/10 bg-ink-700/60 text-grape-50'
+                        : 'dante-chat-bubble dante-bubble-border bg-ink-700/60 text-grape-50'
                     }`}
                   >
                     {msg.role === 'assistant' ? (
@@ -392,16 +417,31 @@ export function DanteChat() {
 
               {loading && (
                 <div className="flex gap-2.5 justify-start">
-                  <div className="dante-loading-avatar flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-sm font-bold">
+                  <div
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
+                    style={{ background: DANTE_GRADIENT }}
+                  >
                     ∞
                   </div>
-                  <div className="flex items-center rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5">
-                    <span className="text-sm text-grape-200/60">Dante está pensando</span>
-                    <span className="ml-1 flex gap-0.5">
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-grape-300 [animation-delay:0ms]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-grape-300 [animation-delay:150ms]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-grape-300 [animation-delay:300ms]" />
-                    </span>
+                  <div className="dante-bubble-border flex flex-col gap-1 rounded-2xl bg-ink-700/60 px-4 py-2.5">
+                    <div className="flex items-center">
+                      <span className="text-sm text-grape-200/60">Dante está pensando</span>
+                      <span className="ml-1 flex gap-0.5">
+                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-grape-300 [animation-delay:0ms]" />
+                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-grape-300 [animation-delay:150ms]" />
+                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-grape-300 [animation-delay:300ms]" />
+                      </span>
+                    </div>
+                    {sarcasmScore !== null && <Sarcasmometer score={sarcasmScore} />}
+                  </div>
+                </div>
+              )}
+
+              {!loading && sarcasmScore !== null && messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
+                <div className="flex gap-2.5 justify-start">
+                  <div className="w-8 flex-shrink-0" />
+                  <div className="max-w-[75%] flex-1">
+                    <Sarcasmometer score={sarcasmScore} />
                   </div>
                 </div>
               )}
@@ -449,10 +489,10 @@ export function DanteChat() {
                   onClick={sendMessage}
                   disabled={loading || !input.trim() || !!activeBreak || powerOff}
                   className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-white transition disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg, #80D8FF, #FF80AB)' }}
+                  style={{ background: DANTE_GRADIENT }}
                   aria-label="Enviar"
                 >
-                  <Send size={18} />
+                  <Rocket size={18} />
                 </button>
               </div>
             </div>

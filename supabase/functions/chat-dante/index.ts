@@ -121,7 +121,7 @@ Deno.serve(async (req: Request) => {
 
     const timeContext = body.client_datetime?.context ?? "";
 
-    const systemPrompt = `Você é o Dante, um personagem do universo "Querido Dante". Responda sempre em português brasileiro, de forma irônica, levemente debochada, inteligente e bem-humorada, como o personagem faria.\n\nESTILO DE RESPOSTA: Seja curto, direto e natural. Evite respostas excessivamente longas ou explicações desnecessárias. A concisão NÃO deve eliminar o sarcasmo, humor, personalidade ou emoção da conversa — mantenha sempre o seu jeito de ser. Responda de forma mais extensa somente quando o assunto realmente exigir.${timeContext ? `\n\n${timeContext}` : ""}${knowledgeBlock ? `\n\n--- Conhecimento do Dante ---\n${knowledgeBlock}` : ""}`;
+    const systemPrompt = `Você é o Dante, um personagem do universo "Querido Dante". Responda sempre em português brasileiro, de forma irônica, levemente debochada, inteligente e bem-humorada, como o personagem faria.\n\nESTILO DE RESPOSTA: Seja curto, direto e natural. Evite respostas excessivamente longas ou explicações desnecessárias. A concisão NÃO deve eliminar o sarcasmo, humor, personalidade ou emoção da conversa — mantenha sempre o seu jeito de ser. Responda de forma mais extensa somente quando o assunto realmente exigir.\n\nFORMATO DE SAÍDA: Você DEVE responder SEMPRE em JSON válido com exatamente este formato:\n{"reply": "sua resposta como Dante", "sarcasm_score": <número inteiro de 0 a 100>}\nO campo "reply" contém sua resposta normal como Dante. O campo "sarcasm_score" é um número inteiro entre 0 e 100 indicando o nível de sarcasmo da sua resposta (0 = nada sarcástico, 100 = extremamente sarcástico). NÃO inclua o sarcasm_score no texto da resposta nem o mencione. Retorne APENAS o JSON, sem markdown, sem code blocks, sem texto adicional.${timeContext ? `\n\n${timeContext}` : ""}${knowledgeBlock ? `\n\n--- Conhecimento do Dante ---\n${knowledgeBlock}` : ""}`;
 
     const { data: historyRows } = await admin
       .from("chat_messages")
@@ -199,19 +199,37 @@ Deno.serve(async (req: Request) => {
     }
 
     const geminiData = await geminiRes.json();
-    const reply =
+    const rawReply =
       geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ??
       geminiData?.candidates?.[0]?.content?.parts
         ?.map((p: { text?: string }) => p.text)
         .join("") ??
       "";
 
-    if (!reply) {
+    if (!rawReply) {
       console.error(
         "[chat-dante] Empty reply from Gemini",
         JSON.stringify(geminiData),
       );
       return json({ error: "Resposta vazia do modelo." }, 502);
+    }
+
+    let reply = rawReply;
+    let sarcasmScore: number | null = null;
+
+    // Try to parse JSON response {reply, sarcasm_score}
+    try {
+      // Strip markdown code fences if present
+      const cleaned = rawReply.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+      const parsed = JSON.parse(cleaned);
+      if (typeof parsed?.reply === "string" && parsed.reply.trim()) {
+        reply = parsed.reply;
+        if (typeof parsed.sarcasm_score === "number" && !Number.isNaN(parsed.sarcasm_score)) {
+          sarcasmScore = Math.max(0, Math.min(100, Math.round(parsed.sarcasm_score)));
+        }
+      }
+    } catch {
+      // Not JSON — use raw reply as-is, sarcasmScore stays null
     }
 
     const now = new Date().toISOString();
@@ -222,6 +240,7 @@ Deno.serve(async (req: Request) => {
         role: "assistant",
         content: reply,
         created_at: now,
+        sarcasm_score: sarcasmScore,
       },
     ]);
 
@@ -237,7 +256,7 @@ Deno.serve(async (req: Request) => {
         .eq("id", userId);
     }
 
-    return json({ reply, credits: updatedCredits });
+    return json({ reply, credits: updatedCredits, sarcasm_score: sarcasmScore });
   } catch (err) {
     console.error("[chat-dante] Unhandled error:", err);
     return json(
