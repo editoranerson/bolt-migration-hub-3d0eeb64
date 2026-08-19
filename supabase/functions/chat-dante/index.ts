@@ -125,11 +125,17 @@ Deno.serve(async (req: Request) => {
 
     const { data: historyRows } = await admin
       .from("chat_messages")
-      .select("role, content")
+      .select("role, content, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(20);
-    const history = ((historyRows ?? []) as ChatRow[]).reverse();
+    const history = ((historyRows ?? []) as (ChatRow & { created_at: string })[]).reverse();
+    history.sort((a, b) => {
+      const ta = new Date(a.created_at).getTime();
+      const tb = new Date(b.created_at).getTime();
+      if (ta !== tb) return ta - tb;
+      return a.role === "user" ? -1 : 1;
+    });
 
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> =
       [];
@@ -232,14 +238,15 @@ Deno.serve(async (req: Request) => {
       // Not JSON — use raw reply as-is, sarcasmScore stays null
     }
 
-    const now = new Date().toISOString();
+    const userTime = new Date().toISOString();
+    const assistantTime = new Date(Date.now() + 1000).toISOString();
     await admin.from("chat_messages").insert([
-      { user_id: userId, role: "user", content: userMessage, created_at: now },
+      { user_id: userId, role: "user", content: userMessage, created_at: userTime },
       {
         user_id: userId,
         role: "assistant",
         content: reply,
-        created_at: now,
+        created_at: assistantTime,
         sarcasm_score: sarcasmScore,
       },
     ]);

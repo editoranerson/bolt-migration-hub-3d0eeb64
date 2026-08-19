@@ -60,6 +60,12 @@ export function DanteChat() {
       .limit(20);
     if (data) {
       const rows = (data as ChatMessage[]).reverse();
+      rows.sort((a, b) => {
+        const ta = new Date(a.created_at).getTime();
+        const tb = new Date(b.created_at).getTime();
+        if (ta !== tb) return ta - tb;
+        return a.role === 'user' ? -1 : 1;
+      });
       setMessages(
         rows.map((m) => ({
           id: m.id,
@@ -70,17 +76,20 @@ export function DanteChat() {
     }
   }, [user]);
 
+  const historyLoadedRef = useRef(false);
+
   useEffect(() => {
     if (open && user) {
-      loadHistory();
+      if (!historyLoadedRef.current) {
+        loadHistory();
+        historyLoadedRef.current = true;
+      }
       if (profile) setCredits(profile.credits ?? 0);
     }
-  }, [open, user, loadHistory]);
-
-  // Atualiza apenas os créditos quando o profile muda.
-  useEffect(() => {
-    if (profile) setCredits(profile.credits ?? 0);
-  }, [profile]);
+    if (!open) {
+      historyLoadedRef.current = false;
+    }
+  }, [open, user, profile, loadHistory]);
 
   useEffect(() => {
     if (!open || isAdmin) return;
@@ -487,7 +496,7 @@ export function DanteChat() {
                   disabled={loading || !!activeBreak || powerOff}
                   placeholder={activeBreak || powerOff ? 'Dante indisponível no momento...' : 'Escreva sua mensagem...'}
                   rows={1}
-                  className="dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transition"
+                  className={`dante-chat-input flex-1 resize-none rounded-2xl border border-white/10 bg-ink-700/60 px-4 py-2.5 text-sm text-grape-50 placeholder:text-grape-200/40 outline-none transition ${activeBreak || powerOff ? 'cursor-not-allowed opacity-50' : ''}`}
                   style={{ maxHeight: '120px' }}
                 />
                 <button
